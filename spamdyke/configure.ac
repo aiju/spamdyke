@@ -149,8 +149,10 @@ AS_IF([ test "x$enable_tls" != "xno" ],
                        [
                          AC_MSG_RESULT([yes])
                          AC_SEARCH_LIBS([RSA_sign], [ssl crypto], [], [ AC_MSG_FAILURE([--enable-tls was given but OpenSSL was not found]) ])
-                         AC_SEARCH_LIBS([SSL_library_init],
-                                        [ssl crypto],
+			 ACCEPT_SSL_LIB="no"
+                         AC_SEARCH_LIBS([SSL_library_init], [ssl crypto], [ACCEPT_SSL_LIB="yes"])
+                         AC_SEARCH_LIBS([OPENSSL_init_ssl], [ssl crypto], [ACCEPT_SSL_LIB="yes"])
+			 AS_IF([ test "x$ACCEPT_SSL_LIB" != "xno" ],
                                         [ LIBS="$LIBS -lssl"
                                           AC_DEFINE([HAVE_LIBSSL], [1])
                                           AC_MSG_CHECKING([for OpenSSL libraries (for TLS support)]) 
