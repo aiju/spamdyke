@@ -1,0 +1,8 @@
+*.o
+Makefile
+config.h
+/spamdyke-qrv/config-qrv.h
+config.status
+config.log
+/spamdyke/spamdyke
+/spamdyke-qrv/spamdyke-qrv
