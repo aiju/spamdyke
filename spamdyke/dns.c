@@ -736,6 +736,8 @@ int nihdns_query(struct filter_settings *current_settings, char **target_name_ar
   if (query_id == 0)
     query_id = (int)random();
 
+//    #define SPAMDYKE_LOG_EXCESSIVE SPAMDYKE_LOG_VERBOSE
+
   num_types = 0;
   for (i = 0; i < NUM_NIHDNS_TYPE; i++)
     if ((type_array & config_type_array[i]) == config_type_array[i])
@@ -1208,7 +1210,12 @@ int nihdns_query(struct filter_settings *current_settings, char **target_name_ar
                             }
                         }
                       }
-                    else
+                    else if((answer[3] & 0xf) == 2)
+		      {
+                      SPAMDYKE_LOG_EXCESSIVE(current_settings, LOG_DEBUGX_DNS_SERVFAIL, answer[0], answer[1]);
+		      num_packets_sent--;
+		      }
+		    else
                       {
                       /*
                        * The response contained no answers, which means "not found".
@@ -1220,7 +1227,7 @@ int nihdns_query(struct filter_settings *current_settings, char **target_name_ar
                         close(socket_list[response_id]);
 
                       socket_list[response_id] = -1;
-                      active_types--;
+		      num_packets_sent--;
                       }
                     }
                   else
@@ -1241,17 +1248,19 @@ int nihdns_query(struct filter_settings *current_settings, char **target_name_ar
                       }
                     }
 
-                  if (active_types == 0)
+                  if (num_packets_sent == 0)
                     {
-                    for (i = 0; i < num_names; i++)
-                      SPAMDYKE_LOG_EXCESSIVE(current_settings, LOG_DEBUGX_DNS_NEGATIVE, target_name_array[i]);
-
                     return_value = 0;
+		    for (j = 0; j < num_names; j++)
+		      for (i = 0; i < num_types; i++)
+			if(socket_list[(j * num_types) + i] != -1)
+			  return_value = -1;
+
+                    if(return_value == 0)
+                      for (i = 0; i < num_names; i++)
+                        SPAMDYKE_LOG_EXCESSIVE(current_settings, LOG_DEBUGX_DNS_NEGATIVE, target_name_array[i]);
                     break;
                     }
-
-                  if (return_value >= 0)
-                    break;
                   }
                 }
 

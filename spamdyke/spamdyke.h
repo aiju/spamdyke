@@ -1094,6 +1094,7 @@ struct rejection_data
 #define LOG_DEBUGX_DNS_QUERY            "EXCESSIVE(%s()@%s:%d): sending %d byte query (ID %d/%d) for %s(%s) to DNS server %s:%d (attempt %d)"
 #define LOG_DEBUGX_DNS_RECEIVED         "EXCESSIVE(%s()@%s:%d): received DNS packet: %d bytes, ID %d/%d"
 #define LOG_DEBUGX_DNS_RECEIVED_TYPE    "EXCESSIVE(%s()@%s:%d): received DNS response: %s, expected %s"
+#define LOG_DEBUGX_DNS_SERVFAIL         "EXCESSIVE(%s()@%s:%d): received SERVFAIL, ID %d/%d"
 #define LOG_DEBUGX_DNS_TXT              "EXCESSIVE(%s()@%s:%d): found TXT record for %s: %.*s"
 #define LOG_DEBUGX_DNS_A                "EXCESSIVE(%s()@%s:%d): found A record for %s: %d.%d.%d.%d"
 #define LOG_DEBUGX_DNS_CNAME            "EXCESSIVE(%s()@%s:%d): found CNAME record for %s: %s"
