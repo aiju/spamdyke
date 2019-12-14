@@ -1,0 +1,190 @@
+================================================================================
+=== UPGRADING FROM VERSION 3.x TO 4.0.0
+================================================================================
+To upgrade spamdyke version 3.x to version 4.0.0 and maintain exactly the same
+behavior as before:
+
+Compile and install spamdyke 4.0.0 the same way as 3.x (use the same
+"--enable-tls" or "--disable-tls" option with the "configure" script).
+
+Edit spamdyke's configuration file or command line:
+  If the "idle-timeout-secs" (-T) option is 0 (disabled), it can be removed
+  (this is new default).  If it was not given, it should be set to 60 (the 3.x
+  default).
+
+  If the "graylist-dir" (-g) option is given, the "graylist-level" option
+  should be given with a value of "always".
+
+  If the "no-graylist-dir" (-G) option is given, it should be changed to
+  "graylist-dir" (-g) and the "graylist-level" option should be given with a
+  value of "only".
+
+  If the "always-graylist-ip-file" option is given, it should be changed to
+  "graylist-exception-ip-file".  The value should remain the same.
+
+  If the "never-graylist-ip-file" option is given, it should be changed to
+  "graylist-exception-ip-file".  The value should remain the same.
+
+  If the "always-graylist-rdns-dir" option is given, it should be changed to
+  "graylist-exception-rdns-dir".  The value should remain the same.
+
+  If the "never-graylist-rdns-dir" option is given, it should be changed to
+  "graylist-exception-rdns-dir".  The value should remain the same.
+
+  If the "always-graylist-rdns-file" option is given, it should be changed to
+  "graylist-exception-rdns-file".  The value should remain the same.
+
+  If the "never-graylist-rdns-file" option is given, it should be changed to
+  "graylist-exception-rdns-file".  The value should remain the same.
+
+  If the "log-level" (-l) option is given with a numeric value, the value should
+  be changed to text as follows:
+    "0" has become "none"
+    "1" has become "error"
+    "2" has become "info"
+    "3" has become "verbose"
+    "4" has become "debug"
+  If the "-l" option is given with no value, it can remain unchanged.
+
+  If the "log-target" option is given with a numeric value, the value should be
+  changed to text as follows:
+    "0" has become "stderr"
+    "1" has become "syslog"
+
+  If the "policy-url" (-u) option is given, the text should be no longer than
+  100 characters or spamdyke will truncate it.  Also, the URL should be
+  constructed so the rejection code can be appended.  For example, if the URL
+  is:
+    http://www.example.com/policy.html
+  spamdyke might append a rejection code like this:
+    http://www.example.com/policy.html#DENIED_RDNS_MISSING
+  If the URL ends in an equals sign (=), spamdyke will append the rejection code
+  without a pound sign (#).  For example, if the URL is:
+    http://www.example.com/policy?reason=
+  spamdyke might append a rejection code like this:
+    http://www.example.com/policy?reason=DENIED_RDNS_MISSING
+
+  If the "check-dns-whitelist" option is given, it should be changed to
+  "dns-whitelist-entry".  The value should remain the same.
+
+  If the "check-dnsrbl" (-x) option is given, it should be changed to
+  "dns-blacklist-entry".  The value should remain the same.
+
+  If the "check-rhs-whitelist" option is given, it should be changed to
+  "rhs-whitelist-entry".  The value should remain the same.
+
+  If the "check-rhsbl" (-X) option is given, it should be changed to
+  "rhs-blacklist-entry".  The value should remain the same.
+
+  If the "ip-in-rdns-keyword-file" option is given, it should be changed to
+  "ip-in-rdns-keyword-blacklist-file".  The value should remain the same.
+
+  If the "smtp-auth-command-encryption" option is given, it should be changed to
+  "smtp-auth-command".  The value should remain the same.  The "smtp-auth-level"
+  should also be given, with a text value of "ondemand-encrypted".
+
+That's it!
+
+
+
+================================================================================
+=== NEW OPTIONS
+================================================================================
+The following options have been added to the "configure" script:
+  disable-config-test (/ enable-config-test)
+  with-debug-output (/ without-debug-output)
+  with-excessive-output (/ without-excessive-output)
+
+The following options have been added to spamdyke:
+  config-dir
+  config-dir-search
+  dns-blacklist-file
+  dns-level
+  dns-max-retries-total
+  dns-max-retries-primary
+  dns-server-ip
+  dns-server-ip-primary
+  dns-timeout-secs
+  dns-whitelist-file
+  filter-level
+  graylist-exception-ip-entry
+  graylist-exception-rdns-entry
+  graylist-level
+  ip-blacklist-entry
+  ip-in-rdns-keyword-blacklist-entry
+  ip-in-rdns-keyword-whitelist-entry
+  ip-in-rdns-keyword-whitelist-file
+  ip-whitelist-entry
+  local-domain-entry
+  rdns-blacklist-entry
+  rdns-whitelist-entry
+  recipient-blacklist-entry
+  recipient-whitelist-entry
+  rejection-text-access-denied
+  rejection-text-auth-failure
+  rejection-text-auth-unknown
+  rejection-text-dns-blacklist
+  rejection-text-earlytalker
+  rejection-text-empty-rdns
+  rejection-text-graylist
+  rejection-text-ip-blacklist
+  rejection-text-ip-in-cc-rdns
+  rejection-text-ip-in-rdns-keyword-blacklist
+  rejection-text-local-recipient
+  rejection-text-max-recipients
+  rejection-text-missing-sender-mx
+  rejection-text-rdns-blacklist
+  rejection-text-recipient-blacklist
+  rejection-text-reject-all
+  rejection-text-relaying-denied
+  rejection-text-rhs-blacklist
+  rejection-text-sender-blacklist
+  rejection-text-smtp-auth-required
+  rejection-text-timeout
+  rejection-text-tls-failure
+  rejection-text-unresolvable-rdns
+  rejection-text-zero-recipients
+  relay-level
+  rhs-blacklist-file
+  rhs-whitelist-file
+  run-as-user
+  sender-blacklist-entry
+  sender-whitelist-entry
+  smtp-auth-level
+  tls-level
+
+
+
+================================================================================
+=== CHANGED OPTIONS
+================================================================================
+The following spamdyke options have changed their behavior/effect:
+  graylist-dir (-g) now has no effect unless "graylist-level" is also given
+  idle-timeout-secs (-T) now defaults to 0 (disabled)
+  log-level (-l) now requires text values instead of numbers
+  log-target now requires text values instead of numbers
+  policy-url (-u) now appends the rejection code AND enforces a 100 character
+    limit
+
+The following spamdyke options have only been renamed (behavior/effect remains
+unchanged):
+  always-graylist-ip-file AND never-graylist-ip-file
+                          became  graylist-exception-ip-file
+  always-graylist-rdns-dir AND never-graylist-rdns-dir
+                          became  graylist-exception-rdns-dir
+  always-graylist-rdns-file AND never-graylist-rdns-file
+                          became  graylist-exception-rdns-file
+  check-dns-whitelist     became  dns-whitelist-entry
+  check-dnsrbl            became  dns-blacklist-entry
+  check-rhs-whitelist     became  rhs-whitelist-entry
+  check-rhsbl             became  rhs-blacklist-entry
+  ip-in-rdns-keyword-file became  ip-in-rdns-keyword-blacklist-file
+
+
+
+================================================================================
+=== REMOVED OPTIONS
+================================================================================
+The following spamdyke options have been removed:
+  config-test-user
+  no-graylist-dir (-G)

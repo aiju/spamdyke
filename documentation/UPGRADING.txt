@@ -1,0 +1,115 @@
+Most of the time, upgrading between versions of spamdyke is as simple as
+replacing the old binary with the new one.  However, sometimes changes are
+introduced that aren't backwards-compatible.  Every time this is done, a
+major version number change will occur (e.g. 1.x.x to 2.0.0).
+
+In each version, the README.html file will reflect the currently available
+options and features.  Be sure to check that file for full details on these
+changes.
+
+UPGRADING FROM VERSION 5.0.0 to 5.0.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.3.1 to 5.0.0:
+  Many changes have been made that are not backwards compatible.  There are
+  too many changes to describe (neatly) in this file -- see the new file
+  named UPGRADING_version_4_to_version_5.txt for instructions.
+
+UPGRADING FROM VERSION 4.3.0 to 4.3.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.2.1 to 4.3.0:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.2.0 to 4.2.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.1.0 to 4.2.0:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.10 to 4.1.0:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.9 to 4.0.10:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.8 to 4.0.9:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.7 to 4.0.8:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.6 to 4.0.7:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.5 to 4.0.6:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.4 to 4.0.5:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.3 to 4.0.4:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.2 to 4.0.3:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.1 to 4.0.2:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 4.0.0 to 4.0.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.8 to 4.0.0:
+  Many changes have been made that are not backwards compatible.  There are
+  too many changes to describe (neatly) in this file -- see the new file
+  named UPGRADING_version_3_to_version_4.txt for instructions.
+
+UPGRADING FROM VERSION 3.1.7 to 3.1.8:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.6 to 3.1.7:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.5 to 3.1.6:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.4 to 3.1.5:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.3 to 3.1.4:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.2 to 3.1.3:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.1 to 3.1.2:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.1.0 to 3.1.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.0.1 to 3.1.0:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 3.0.0 to 3.0.1:
+  All changes are backwards compatible.
+
+UPGRADING FROM VERSION 2.x.x to 3.0.0:
+  Short command line options (single letter options) no longer work as before:
+  1) They cannot be clustered.  For example, "-rlRc" is no longer valid.
+     Each option must be separate.  For example, "-r -l -R -c".
+  2) Short options can now take optional values.  (In version 3.0.0, the only
+     such option is "-l".)  Values given to these options must not be separated
+     by a space.  For example, "-l3" is valid.
+
+  The long command line option "use-syslog" has been changed to "log-level" and
+  now takes an optional numeric value.
+
+  The format of the syslog entries has changed for delivered messages.  The
+  keyword "origin:" has changed to "origin_ip:".  The new keywords
+  "origin_rdns:" has been inserted before the remote server's rDNS name and
+  the new keyword "auth:" has been inserted before the authenticated user's
+  username.  If the entry shows a timeout, the new keyword "reason:" will be
+  inserted before the real reason for the rejection (if there was one).
+  Any scripts written to analyze the logs will need to be updated.

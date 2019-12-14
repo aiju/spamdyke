@@ -1,0 +1,66 @@
+# @configure_input@
+################################################################################
+# spamdyke -- a filter for stopping spam at connection time.
+# Copyright (C) 2015 Sam Clippinger (samc (at) silence (dot) org)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+prefix := @prefix@
+exec_prefix := @exec_prefix@
+
+CC := @CC@
+CFLAGS := @CFLAGS@ -funsigned-char
+LDFLAGS := @LDFLAGS@
+LIBS := @LIBS@
+
+OFILES := spamdyke-qrv.o array-qrv.o cdb-qrv.o configuration-qrv.o environment-qrv.o exec-qrv.o fs-qrv.o log-qrv.o usage-qrv.o validate-qrv.o
+
+spamdyke-qrv: $(OFILES)
+	$(CC) $(CFLAGS) $(DEFS) -o spamdyke-qrv $(OFILES) $(LDFLAGS) $(LIBS)
+	@STRIP_CMD@
+
+install: spamdyke-qrv
+	cp spamdyke-qrv @bindir@
+	chown root @bindir@/spamdyke-qrv
+	chmod u+s @bindir@/spamdyke-qrv
+
+spamdyke-qrv.o: spamdyke-qrv.c Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c spamdyke-qrv.c
+array-qrv.o: array-qrv.c array-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c array-qrv.c
+cdb-qrv.o: cdb-qrv.c cdb-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c cdb-qrv.c
+configuration-qrv.o: configuration-qrv.c configuration-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c configuration-qrv.c
+environment-qrv.o: environment-qrv.c environment-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c environment-qrv.c
+exec-qrv.o: exec-qrv.c exec-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c exec-qrv.c
+fs-qrv.o: fs-qrv.c fs-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c fs-qrv.c
+log-qrv.o: log-qrv.c log-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c log-qrv.c
+usage-qrv.o: usage-qrv.c usage-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c usage-qrv.c
+validate-qrv.o: validate-qrv.c validate-qrv.h Makefile spamdyke-qrv.h config-qrv.h
+	$(CC) $(CFLAGS) -c validate-qrv.c
+
+clean:
+	rm -rf spamdyke-qrv spamdyke-qrv-no-vpopmail *.o .gdb_history *.dSYM
+
+distclean: clean
+	rm -rf autom4te.cache config-qrv.h config.log config.status Makefile
+
+love:
+	@echo Not war?

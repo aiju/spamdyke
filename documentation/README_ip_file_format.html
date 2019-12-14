@@ -1,0 +1,127 @@
+<!--#set var="SELECTED_DOCUMENTATION" VALUE="selected"-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<title>spamdyke: IP File Format</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<link rel="stylesheet" type="text/css" href="http://www.spamdyke.org/style/style.css" />
+<link rel="icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+<div id="main">
+<div id="links_container">
+<div id="logo"><h1>spamdyke</h1><h2>A drop-in connection-time spam filter for qmail</h2></div>
+<div id="links">
+</div>
+</div>
+<div id="menu">
+<ul>
+<li><a href="http://www.spamdyke.org/">Home</a></li>
+<li><a href="http://www.spamdyke.org/download.html">Download</a></li>
+<li><a id="selected" href="#">Documentation</a></li>
+<li><a href="FAQ.html">FAQ</a></li>
+<li><a href="http://www.spamdyke.org/support.html">Support</a></li>
+<li><a href="http://www.spamdyke.org/mailinglists.html">Mailing Lists</a></li>
+<li><a href="http://www.spamdyke.org/links.html">Links</a></li>
+</ul>
+</div>
+<div id="content">
+<!--#include virtual="../includes/rightnav.html"-->
+<div id="column2">
+
+<h2>IP address files</h2>
+<p>
+Some of spamdyke's options search files for IP addresses.  In all those
+cases, the format of the files is the same.  Blank lines and lines beginning
+with <code>#</code> are ignored.  Every other line in the file is expected to contain a
+single entry.
+</p><p>
+<b>NOTE: To protect against unknown dangers like programming errors, corrupted
+filesystems or incorrect file paths, spamdyke will only read the first 65536 lines
+of any file.  If the file is any larger, spamdyke will printing an error message
+into its logs.  If there is a legitimate reason to have more than 65536 lines in a
+file, the content should be separated into multiple files and spamdyke's option
+should be given multiple times to search each file.</b>
+</p><p>
+Individual IP addresses may be given in dotted quad format.  Those IP addresses
+will be matched literally.  For example:
+<dl>
+<dd><code>11.22.33.44</code>
+<dd><code>23.34.45.56</code>
+</dl>
+Two IP addresses will be matched by these entries, <code>11.22.33.44</code> and <code>23.34.45.56</code>.
+NOTE: In dotted quad format, leading zeroes are ignored, so the following is
+equivalent to the previous example:
+<dl>
+<dd><code>011.022.033.044</code>
+<dd><code>023.034.045.056</code>
+</dl>
+</p><p>
+IP address ranges may be given in one of four ways.  First, one or more octets
+of an IP address may be given and will match any IP addresses with the same
+first few octets.  For example, if the file contained the following entry:
+<dl>
+<dd><code>11.22.33</code>
+</dl>
+The IP addresses <code>11.22.33.14</code>, <code>11.22.33.25</code> and <code>11.22.33.236</code> will all match.
+A trailing dot is optional, so if the file contained the following entry:
+<dl>
+<dd><code>11.22.</code>
+</dl>
+The IP addresses <code>11.22.33.44</code>, <code>11.22.134.245</code> and <code>11.22.235.46</code> will all match.
+</p><p>
+Second, a full or partial IP address with ranges may be given an will match
+an IP addresses with octets that match the ranges given.  For example, if
+the file contained the following entry:
+<dl>
+<dd><code>11.22.33-44.55</code>
+</dl>
+The IP addresses <code>11.22.34.55</code>, <code>11.22.38.55</code> and <code>11.22.41.55</code> will all match.
+If the file contained the following entry:
+<dl>
+<dd><code>11.22-44</code>
+</dl>
+The IP addresses <code>11.22.134.7</code>, <code>11.36.1.267</code> and <code>11.43.178.240</code> will all match.
+</p><p>
+Third, a full IP address may be given with a netmask, given as a number of
+bits.  For example, if the file contained the following entry:
+<dl>
+<dd><code>11.22.33.0/24</code>
+</dl>
+The IP addresses <code>11.22.33.2</code>, <code>11.22.33.189</code> and <code>11.22.33.241</code> will all match.
+If the file contained the following entry:
+<dl>
+<dd><code>11.22.0.0/16</code>
+</dl>
+The IP addresses <code>11.22.165.98</code>, <code>11.22.8.135</code> and <code>11.22.0.254</code> will all match.
+</p><p>
+Fourth, a full IP address may be given with a netmask in dotted quad format.
+For example, if the file contained the following entry:
+<dl>
+<dd><code>11.22.33.0/255.255.255.0</code>
+</dl>
+The IP addresses <code>11.22.33.13</code>, <code>11.22.33.76</code> and <code>11.22.33.199</code> will all match.
+If the file contained the following entry:
+<dl>
+<dd><code>11.22.0.0/255.255.0.0</code>
+</dl>
+The IP addresses <code>11.22.59.111</code>, <code>11.22.7.189</code> and <code>11.22.83.213</code> will all match.
+</p><p>
+When a netmask is given, either as a number of bits or a dotted quad, ranges in
+the base IP address are ignored.  If they're present, they don't cause errors
+but they have no effect.
+</p>
+
+</div>
+</div>
+<div id="footer">
+copyright &copy;2015 Sam Clippinger |
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> |
+<a href="http://www.dcarter.co.uk">design by dcarter</a>
+</div>
+</div>
+</body>
+</html>

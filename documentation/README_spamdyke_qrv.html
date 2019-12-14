@@ -1,0 +1,101 @@
+<!--#set var="SELECTED_DOCUMENTATION" VALUE="selected"-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<title>spamdyke: Recipient Validation With spamdyke-qrv</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<link rel="stylesheet" type="text/css" href="http://www.spamdyke.org/style/style.css" />
+<link rel="icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+<div id="main">
+<div id="links_container">
+<div id="logo"><h1>spamdyke</h1><h2>A drop-in connection-time spam filter for qmail</h2></div>
+<div id="links">
+</div>
+</div>
+<div id="menu">
+<ul>
+<li><a href="http://www.spamdyke.org/">Home</a></li>
+<li><a href="http://www.spamdyke.org/download.html">Download</a></li>
+<li><a id="selected" href="#">Documentation</a></li>
+<li><a href="FAQ.html">FAQ</a></li>
+<li><a href="http://www.spamdyke.org/support.html">Support</a></li>
+<li><a href="http://www.spamdyke.org/mailinglists.html">Mailing Lists</a></li>
+<li><a href="http://www.spamdyke.org/links.html">Links</a></li>
+</ul>
+</div>
+<div id="content">
+<!--#include virtual="../includes/rightnav.html"-->
+<div id="column2">
+
+<h2>Recipient Validation With spamdyke-qrv</h2>
+<p>
+It's impossible to overstate the complexity of qmail's recipient validation procedure.
+It is <i>inexcusably</i> complex, far beyond the point where anyone can be certain qmail's implementation is correct (and secure) in all cases.
+If you want to get a glimpse at how bad it is, take at look at the flowchart <a href="development_notes/recipient_validation.pdf">here</a>.
+You'll see the flowchart is big, but the number of possible configurations is describes enormous: there are just under 165 <b>thousand</b> different paths through it (even more if the loops are followed multiple times).
+Fully testing spamdyke's <code>reject-recipient</code> filter requires checking every one of those paths -- this takes weeks to finish using spamdyke's test scripts.
+spamdyke-qrv begins its work at step 7 in the flowchart (steps 1, 2, 5 and 6 are assumed to have been performed by spamdyke before spamdyke-qrv was started).
+</p><p>
+spamdyke-qrv is intended to be run as root by marking the binary "setuid root".
+This is necessary because spamdyke typically runs as a non-root user and doesn't have access to all of the files needed to validate an address without root access.
+</p><p>
+spamdyke-qrv returns its results to spamdyke using its exit code:
+<ul>
+<li><code>0</code>: No determination was made -- spamdyke-qrv could not tell if the address is valid or not
+<li><code>1</code>: The address is valid
+<li><code>2</code>: The address is invalid, delivery is not possible.  Without spamdyke-qrv, qmail would accept the message, then bounce it.
+<li><code>3</code>: The address is unavailable until some condition is met -- usually a file's or directory's permissions must be changed.
+Without spamdyke-qrv, qmail accept the message and queue it until the condition is met.
+When qmail was written, this situation was probably common, since most users logged into their mail servers at the command line and edited files by hand.
+These days, an "unavailable" condition is most likely due to a misconfiguration that won't be fixed for days (if ever)
+In that case, qmail will queue the message for a while and eventually bounce it.
+</ul>
+In theory, another program could be created to perform recipient validation that accepts the same inputs and returns the same exit codes.
+This is not recommended, however, because the details of correctly validating an address are simply overwhelming (again, see the flowchart).
+</p><p>
+If vpopmail is in use, spamdyke-qrv should be compiled with vpopmail support, which will allow it to execute two of vpopmail's programs in the final stages of validating an address.
+These two programs are:
+<ul>
+<li><code>valias</code>: This program looks up an address to determine if it is an alias for a real mailbox (vpopmail uses its own internal system for aliases instead of creating .qmail files).
+If a recipient address is actually a vpopmail alias, spamdyke-qrv has no way to look it up and may mistakenly reject the address without <code>valias</code>.
+<li><code>vuserinfo</code>: This program returns information about a recipient address; spamdyke-qrv uses it simply to determine if the address exists.
+Because vpopmail keeps its own list of valid addresses, it is possible for an address to appear valid (e.g. the correct files and directories exist on disk) when it is not.
+</ul>
+</p><p>
+Before executing either of these programs, spamdyke-qrv will drop its root privileges so they will run as the vpopmail user.
+However, because this user typically has access to every mailbox on the server, executing extra binaries represents a potential security risk.
+For this reason, the full path to each program must be given when spamdyke-qrv is compiled -- paths to the vpopmail binaries cannot be supplied on the command line and they will not be found using the <code>PATH</code>.
+To specify the path to the programs, use the <code>configure</code> script with the <code>VALIAS_PATH</code> and <code>VUSERINFO_PATH</code> options:
+<blockquote>
+<code>VALIAS_PATH=/path/to/valias VUSERINFO_PATH=/path/to/vuserinfo ./configure --with-vpopmail-support</code>
+</blockquote>
+</p><p>
+spamdyke-qrv will accept several command line arguments if qmail's control files are in a non-standard location.
+These options should only be used if qmail was customized somehow to store its files elsewhere (very unusual).
+<ul>
+<li><code>qmail-assign-cdb</code>: The full path to qmail's "assign" CDB file (be sure to use the CDB file, not the text file that was used to create it). The default value is: <code>/var/qmail/users/cdb</code>
+<li><code>qmail-defaultdelivery-file</code>: The full path to qmail's "defaultdelivery" file. The default value is: <code>/var/qmail/control/defaultdelivery</code>
+<li><code>qmail-envnoathost-file</code>: The full path to qmail's "envnoathost" file. The default value is: <code>/var/qmail/control/envnoathost</code>
+<li><code>qmail-locals-file</code>: The full path to qmail's "locals" file. The default value is: <code>/var/qmail/control/locals</code>
+<li><code>qmail-me-file</code>: The full path to qmail's "me" file. The default value is: <code>/var/qmail/control/me</code>
+<li><code>qmail-morercpthosts-cdb</code>: The full path to qmail's "morercpthosts" CDB file (be sure to use the CDB file, not the text file that was used to create it). The default value is: <code>/var/qmail/control/morercpthosts.cdb</code>
+<li><code>qmail-percenthack-file</code>: The full path to qmail's "percenthack" file. The default value is: <code>/var/qmail/control/percenthack</code>
+<li><code>qmail-rcpthosts-file</code>: The full path to qmail's "rcpthosts" file. The default value is: <code>/var/qmail/control/rcpthosts</code>
+</ul>
+</p>
+
+</div>
+</div>
+<div id="footer">
+copyright &copy;2015 Sam Clippinger |
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> |
+<a href="http://www.dcarter.co.uk">design by dcarter</a>
+</div>
+</div>
+</body>
+</html>

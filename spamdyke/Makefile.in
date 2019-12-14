@@ -1,0 +1,74 @@
+# @configure_input@
+################################################################################
+# spamdyke -- a filter for stopping spam at connection time.
+# Copyright (C) 2015 Sam Clippinger (samc (at) silence (dot) org)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+CC := @CC@
+CPP := @CPP@
+CFLAGS := @CFLAGS@ -funsigned-char @CPPFLAGS@
+LDFLAGS := @LDFLAGS@
+LIBS := @LIBS@
+
+OFILES := spamdyke.o configuration.o dns.o environment.o usage.o search_fs.o exec.o base64.o tls.o log.o config_test.o md5.o filter.o cdb.o
+
+spamdyke: $(OFILES)
+	$(CC) $(CFLAGS) $(DEFS) -o spamdyke $(OFILES) $(LDFLAGS) $(LIBS)
+	@STRIP_CMD@
+
+install: spamdyke
+	cp spamdyke /usr/local/bin/spamdyke-@PACKAGE_VERSION@
+	rm -f /usr/local/bin/spamdyke
+	ln -s /usr/local/bin/spamdyke-@PACKAGE_VERSION@ /usr/local/bin/spamdyke
+
+spamdyke.o: spamdyke.c spamdyke.h Makefile config.h
+	$(CC) $(CFLAGS) $(DEFS) -c spamdyke.c
+dns.o: dns.c dns.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c dns.c
+environment.o: environment.c environment.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c environment.c
+usage.o: usage.c usage.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c usage.c
+search_fs.o: search_fs.c search_fs.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c search_fs.c
+exec.o: exec.c exec.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c exec.c
+base64.o: base64.c base64.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c base64.c
+tls.o: tls.c tls.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c tls.c
+log.o: log.c log.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c log.c
+config_test.o: config_test.c config_test.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c config_test.c
+md5.o: md5.c md5.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c md5.c
+filter.o: filter.c filter.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c filter.c
+cdb.o: cdb.c cdb.h Makefile spamdyke.h config.h
+	$(CC) $(CFLAGS) $(DEFS) -c cdb.c
+
+# This avoids a gcc segfault on FreeBSD 6.0.
+configuration.o: configuration.c configuration.h Makefile spamdyke.h config.h
+	$(CPP) $(CFLAGS) $(DEFS) configuration.c | $(CC) $(CFLAGS) $(DEFS) -x c -c -o configuration.o -
+
+clean:
+	rm -rf spamdyke *.o .gdb_history *.dSYM
+
+distclean: clean
+	rm -rf autom4te.cache config.h config.log config.status Makefile
+
+love:
+	@echo Not war?

@@ -1,0 +1,1106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<title>spamdyke: FAQ</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<link rel="stylesheet" type="text/css" href="http://www.spamdyke.org/style/style.css" />
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+<div id="main">
+<div id="links_container">
+<div id="logo"><h1>spamdyke</h1><h2>A drop-in connection-time spam filter for qmail</h2></div>
+<div id="links">
+</div>
+</div>
+<div id="menu">
+<ul>
+<li><a href="http://www.spamdyke.org/">Home</a></li>
+<li><a href="http://www.spamdyke.org/download.html">Download</a></li>
+<li><a href="README.html">Documentation</a></li>
+<li><a id="selected" href="FAQ.html">FAQ</a></li>
+<li><a href="http://www.spamdyke.org/support.html">Support</a></li>
+<li><a href="http://www.spamdyke.org/mailinglists.html">Mailing Lists</a></li>
+<li><a href="http://www.spamdyke.org/links.html">Links</a></li>
+</ul>
+</div>
+<div id="content">
+<!--#include virtual="../includes/rightnav.html"-->
+<div id="column2">
+<h1>Frequently Asked Questions</h1>
+<h2>General Questions</h2>
+<ul>
+<li><a href="#GEN1">What is spamdyke and what does it do?</a></li>
+<li><a href="#GEN2">I use email but I don't administer my own mail server. Can I use spamdyke?</a></li>
+<li><a href="#GEN3">How do I install spamdyke?</a></li>
+<li><a href="#GEN4">How do I upgrade spamdyke?  What's the significance of the version numbers?</a></li>
+<li><a href="#GEN5">How do I get support for spamdyke?  Is there a mailing list?</a></li>
+<li><a href="#GEN6">I don't use qmail.  Can I still use spamdyke?</a></li>
+<li><a href="#GEN7">I use Plesk.  What is qmail?  Can I still use spamdyke?</a></li>
+<li><a href="#GEN8">Do I have to install the programs from the "utils" directory?  Does spamdyke use
+them?  Do they use spamdyke or each other?</a></li>
+<li><a href="#GEN9">When I reconfigure spamdyke, do I have to restart qmail?</a></li>
+<li><a href="#GEN10">What is the difference between a right-hand-side blacklist (RHSBL) and a realtime blackhole list (RBL)?</a></li>
+<li><a href="#GEN11">Which RBLs and/or RHSBLs do you recommend?</a></li>
+<li><a href="#GEN12">What operating systems and versions do you test spamdyke with?</a></li>
+<li><a href="#GEN13">I love spamdyke!  How can I help?  Can I send you money?</a></li>
+</ul>
+<h2>Feature Questions</h2>
+<ul>
+<li><a href="#FEATURE1">Does spamdyke run its filters in any particular order?</a></li>
+<li><a href="#FEATURE2">If spamdyke checks IP blacklists before it checks sender whitelists, will whitelisted senders from blacklisted IPs be blocked?</a></li>
+<li><a href="#FEATURE3">My users authenticate with SMTP AUTH.  Can I still use spamdyke?</a></li>
+<li><a href="#FEATURE4">My users authenticate with POP3-before-SMTP.  Can I still use spamdyke?</a></li>
+<li><a href="#FEATURE5">I want to block all emails unless the sender authenticates.  Can spamdyke do that?</a></li>
+<li><a href="#FEATURE6">Does spamdyke support TLS?</a></li>
+<li><a href="#FEATURE7">I want to whitelist a large number of IP addresses; can I use wildcards?</a></li>
+<li><a href="#FEATURE8">I want to disable some filters for a few domains (or users) and enable them for everyone else.  Is that possible?</a></li>
+<li><a href="#FEATURE9">My users' PCs are infected with spambots and are sending spam through my server.  Can I force them to authenticate to block the spam?</a></li>
+<li><a href="#FEATURE10">I want to stop backscatter spam by blocking all messages to invalid or non-existant recipient addresses.  Can spamdyke do that?</a></li>
+<li><a href="#FEATURE11">Why does spamdyke-qrv have to be marked setuid root?  Setuid binaries are evil incarnate!</a></li>
+</ul>
+<h2>Feature Suggestions</h2>
+<ul>
+<li><a href="#SUGGESTION0">On the mailing list, you often promise changes in an upcoming version.  How can I find out what you're working on?</a></li>
+<li><a href="#SUGGESTION1">Why doesn't spamdyke use CDB files or a database?  A database would be faster and better
+than text files and strange directory structures!</a></li>
+<li><a href="#SUGGESTION2">Why doesn't spamdyke filter using Sender Policy Framework (SPF), Sender ID, Certified Server Validation (CSV),
+DomainKeys or DomainKeys Identified Mail (DKIM)?</a></li>
+<li><a href="#SUGGESTION3">Why can't spamdyke filter based on message headers like "From:" or "Received:"?</a></li>
+<li><a href="#SUGGESTION4">Why can't spamdyke block large messages or strip attachments?</a></li>
+<li><a href="#SUGGESTION5">My graylist directories are getting huge -- many, many entries.  Is this is a problem?  What can I do?</a></li>
+<li><a href="#SUGGESTION6">Why can't spamdyke automatically delete old graylist entries?</a></li>
+<li><a href="#SUGGESTION7">Instead of trying to prevent relaying itself, why doesn't spamdyke just set the <code>RELAYCLIENT</code>
+environment variable based on authentication/sender address/recipient address?</a></li>
+<li><a href="#SUGGESTION8">Why can't spamdyke automatically blacklist (or delay) servers that are rejected too many times?</a></li>
+<li><a href="#SUGGESTION9">Why doesn't spamdyke's graylist filter use the IP address of the remote server?</a></li>
+</ul>
+<h2>Troubleshooting</h2>
+<ul>
+<li><a href="#TROUBLE1">Graylisting isn't working!  What am I doing wrong?</a></li>
+<li><a href="#TROUBLE2">I want to use spamdyke but some of my users roam and connect from strange
+places.  How can I allow them to send email but still filter spam?</a></li>
+<li><a href="#TROUBLE3">I installed spamdyke and now I'm seeing a lot of timeouts in my logs.  Why?</a></li>
+<li><a href="#TROUBLE4">I installed spamdyke and now my server is very slow!  Incoming connections
+have to wait 20 seconds or longer before they see the greeting banner. What
+can I do speed it up?</a></li>
+<li><a href="#TROUBLE5">I use spamdyke to prevent relaying (because my qmail isn't patched to provide
+SMTP AUTH) but SpamAssassin has stopped scanning incoming messages.  What gives?</a></li>
+<li><a href="#TROUBLE6">My logs contain the message <code>ERROR: unable to write X bytes to file descriptor 1: Broken pipe</code>.
+What does it mean?</a></dd>
+<li><a href="#TROUBLE7">When I use the <code>config-test</code> feature on my Plesk server, the SMTP AUTH
+tests always fail.  But I know authentication works, so what's wrong?</a></li>
+<li><a href="#TROUBLE8">Why isn't spamdyke blocking messages from some blacklisted servers/senders/recipients?</a></li>
+<li><a href="#TROUBLE9">I can't figure out why spamdyke isn't working correctly -- some features are malfunctioning in
+strange ways <b>OR</b> I'm seeing strange/impossible error messages in my logs.  What's wrong?</a></li>
+<li><a href="#TROUBLE10">Why are messages still being rejected even after I've added the sender's domain name to my rDNS whitelist? <b>OR</b>
+Why aren't messages being rejected after I've added the sender's domain name to my rDNS blacklist?</a></li>
+<li><a href="#TROUBLE11">I enabled the IP-in-rDNS filter, so why isn't spamdyke blocking connections from servers
+with rDNS names that contain IP addresses?</a></li>
+<li><a href="#TROUBLE12">I'm trying to run spamdyke's <code>config-test</code> feature but it only says "Missing qmail-smtpd command".  What's wrong?</a></li>
+</ul>
+
+<hr />
+
+<a name="GEN1"></a>
+<h2>What is spamdyke and what does it do?</h2>
+<p>
+In a sentence, spamdyke is a drop-in qmail filter for stopping spam at
+connection-time.
+</p><p>
+"drop-in" means it can be installed without patching or recompiling qmail,
+without installing or updating libraries, without drastically reconfiguring
+anything and without having to become a qmail expert.
+</p><p>
+"connection-time" means spamdyke evaluates and rejects spam while the remote
+server is still delivering it.  Other filters and anti-spam solutions focus on
+classifying spam after qmail has accepted it.  The spam still has to go
+somewhere.  Even if it's filed in a folder, it still occupies disk space,
+consumes server resources and must be deleted by someone.  When spamdyke rejects
+the incoming spam completely, no one has to deal with it.  It's never on the
+server at all.
+</p><p>
+For a complete description of spamdyke and all its features, see the <a href="README.html">README page</a>.
+</p>
+
+<a name="GEN2"></a>
+<h2>I use email but I don't administer my own mail server. Can I use spamdyke?</h2>
+<p>
+Unfortunately, no.  spamdyke must be installed by a mail administrator.  It cannot be installed or used by end users, sorry.
+</p>
+
+<a name="GEN3"></a>
+<h2>How do I install spamdyke?</h2>
+<p>
+For installation instructions, see the <a href="INSTALL.txt">INSTALL.txt file</a>.
+</p>
+
+<a name="GEN4"></a>
+<h2>How do I upgrade spamdyke?  What's the significance of the version numbers?</h2>
+<p>
+Typically, upgrading spamdyke is as simple as compiling the new version and
+copying the new <code>spamdyke</code> binary over the old one.  However, sometimes
+the new version is not backwards-compatible with the old version and simply replacing
+the binary will cause problems.  The <a href="UPGRADING.txt">UPGRADING.txt file</a> has
+details on the backwards-compatibility of each version.
+</p><p>
+The version numbers are used to show the type of changes in each version:
+<ul>
+<li>When major, non-backwards-compatible changes are made, the "major" version
+number is incremented.  For example, 3.0.0 is not completely backwards compatible
+with 2.6.3, so the major version number changed from 2 to 3.</li>
+<li>When new, backwards-compatible features are added, only the "minor" version
+number is incremented.  For example, 3.1.0 includes new features but is backwards
+compatible with 3.0.0, so the minor version number changed from 0 to 1.</li>
+<li>When no features are added but bugs are fixed, only the "revision" version number
+is incremented.  For example, 3.0.1 only contained bug fixes, so the revision
+version number changed from 0 to 1.</li>
+</ul>
+</p>
+
+<a name="GEN5"></a>
+<h2>How do I get support for spamdyke?  Is there a mailing list?</h2>
+<p>
+Yes!  Visit the mailing list page to sign up: <a href="http://www.spamdyke.org/mailman/listinfo/spamdyke-users">www.spamdyke.org/mailman/listinfo/spamdyke-users</a>.
+The mailing list archives are searchable at: <a href="http://www.mail-archive.com/spamdyke-users@spamdyke.org">www.mail-archive.com/spamdyke-users@spamdyke.org</a>.
+</p><p>
+All of the documentation and releases can be found at on the spamdyke
+website at <a href="http://www.spamdyke.org/">spamdyke.org</a>.
+</p><p>
+If you can't find answers there, send an email to me at:
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a>
+
+<a name="GEN6"></a>
+<h2>I don't use qmail.  Can I still use spamdyke?</h2>
+<p>
+Not at this time.
+</p><p>
+Some background: Qmail starts a new process (<code>qmail-smtpd</code>) from a listening
+daemon (<code>tcpserver</code> or <code>xinetd</code>) every time a new connection is established.  spamdyke slips
+in between those two, so the daemon starts a new copy of spamdyke for each
+connection and spamdyke starts the qmail process.
+</p><p>
+Most other mail servers don't work this way; they use a single long-running
+daemon for handling incoming requests.  There's no way to insert spamdyke
+without rewriting the mail server daemon (no thanks!).
+</p><p>
+Having said that, spamdyke could be modified to listen for incoming connections
+itself (replacing qmail's tcpserver) and establish a new connection to the
+"real" server (presumably listening on a different port, perhaps running on a
+different interface or machine).  This requires some refactoring in the spamdyke
+code but it's not an insurmountable task.
+</p><p>
+Look for this feature in a future version.
+</p>
+
+<a name="GEN7"></a>
+<h2>I use Plesk.  What is qmail?  Can I still use spamdyke?</h2>
+<p>
+Yes.  Plesk is a (large, complicated) control panel for configuring your server
+through a web interface.  qmail is mail server software that handles email delivery.
+Plesk uses qmail under the hood and handles most of its configuration.
+</p><p>
+spamdyke works very well with Plesk, but there's no automated "push-button" way to
+install it.  You'll need to connect to your server's command line (probably using SSH)
+to install it.  
+If you're comfortable doing that, see the <a href="INSTALL.txt">INSTALL.txt file</a> for installation instructions.
+</p>
+
+<a name="GEN8"></a>
+<h2>Do I have to install the programs from the "utils" directory?  Does spamdyke use
+them?  Do they use spamdyke or each other?</h2>
+<p>
+No.  domainsplit, domain2path and timefilter are just small utilities for use in writing
+scripts.  spamdyke doesn't use them or depend on them.  Conversely, they don't
+use or depend on spamdyke.
+</p><p>
+dnsa, dnsmx, dnsns, dnsptr, dnssoa and dnstxt are just small, self-contained examples of how to make
+DNS queries using libc.  They're not really useful on their own.
+I made them available because I was looking for examples like them when I was
+writing the DNS code in spamdyke and I couldn't find any.  Hopefully someone
+else will be able to learn from them.  Aren't I just a swell guy?
+</p>
+
+<a name="GEN9"></a>
+<h2>When I reconfigure spamdyke, do I have to restart qmail?</h2>
+<p>
+Usually not, but it depends on what you've done.
+</p><p>
+You do not need to restart qmail when you:
+<ul>
+<li>Replace the spamdyke binary</li>
+<li>Edit spamdyke's configuration file</li>
+<li>Edit a file in a configuration directory</li>
+<li>Edit a file referenced from spamdyke's configuration (e.g. adding IP addresses to a whitelist file)</li>
+</ul>
+</p><p>
+You must restart qmail when you:
+<ul>
+<li>Edit spamdyke's command line</li>
+</ul>
+</p>
+
+<a name="GEN10"></a>
+<h2>What is the difference between a right-hand-side blacklist (RHSBL) and a realtime blackhole list (RBL)?</h2>
+<p>
+Right-hand-side blacklists (RHSBLs) are lists of domain names.  The name refers to the "right-hand side"
+of an email address -- the portion after the "@" symbol.  Realtime blackhole lists (RBLs) are lists of IP addresses.
+</p><p>
+Why the difference?
+</p><p>
+Broadly speaking, most mail servers have one IP address and host many domains.  Most mail email providers
+fall into this category -- none of their hosted domains have enough email traffic to
+justify having their own server, so a single server is configured to handle as many domains as it can.
+When the server's IP address is blocked, all of the domains it hosts are blocked.  RBLs do this.
+</p><p>
+Conversely, some domains have enough email traffic to need multiple servers.  Those servers are dedicated
+to that one domain and no others.  Since the other servers have different IPs, blocking just one IP address is not enough,
+the domain name must be blocked instead.  RHSBLs do this.
+</p><p>
+Numerous public RBLs exist for blocking IP addresses.  Since spammers don't usually
+send from multiple servers with the same domain name (and they almost always use fake sender addresses), RHSBLs are rather rare.
+</p>
+
+<a name="GEN11"></a>
+<h2>Which RBLs and/or RHSBLs do you recommend?</h2>
+<p>
+None.  Blacklists are a sensitive issue.  Their legal status is uncertain, depending on what country
+and area you (and they) live in.
+</p><p>
+Blacklist operators each have different policies about how entries are placed on the list and how
+they are removed.  Some operators are very forgiving, others are not.  For some, a simple delisting
+request is enough while others require more elaborate "proof" a server/domain has "been reformed".
+Some require money.  Many operators have been known to list huge blocks of IP addresses or domains
+in order to pressure an ISP to cancel a spammer's service.  This effectively recruits all of the
+list's subscribers into a large group to boycott the ISP's services.
+</p><p>
+For all of those reasons, I am not willing to endorse any specific list (although I use several myself).
+You must decide for yourself if you are comfortable with a list operator's policies.  Be sure to
+look for complaints against about the list and responses from the operators.  Sometimes those can be
+the best indicator of a list operator's true attitude.
+</p>
+
+<a name="GEN12"></a>
+<h2>What operating systems and versions do you test spamdyke with?</h2>
+<p>
+On the following systems, spamdyke's configuration script executes correctly, it compiles
+without errors or warnings and displays its usage message:
+<ul>
+<li>Amazon AWS (latest version at time of release)</li>
+<!--<li>Apple OS X 10.6</li>-->
+<li>CentOS 5.2 64-bit</li>
+<li>CentOS 5.5</li>
+<li>CentOS 6.4 64-bit</li>
+<li>CentOS 7 64-bit</li>
+<li>Debian 7 RC2 (wheezy)</li>
+<li>Fedora Core 4</li>
+<li>Fedora 11</li>
+<li>FreeBSD 2.2.2</li>
+<li>FreeBSD 4.7</li>
+<li>FreeBSD 6.0</li>
+<li>NetBSD 3.1</li>
+</ul>
+</p><p>
+spamdyke's test scripts execute correctly on the following systems:
+<ul>
+<li>CentOS 7 64-bit, netqmail 1.05 (patched with TLS and SMTP AUTH) and vpopmail 5.4.10</li>
+<li>CentOS 7 64-bit, netqmail 1.05 (no additional patches) and vpopmail 5.4.10</li>
+</ul>
+If you are unable to configure or compile spamdyke correctly, please send an email to
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> so the errors can
+be fixed and your system can be added to the list of test environments.
+</p>
+
+<a name="GEN13"></a>
+<h2>I love spamdyke!  How can I help?  Can I send you money?</h2>
+<p>
+I appreciate your generosity, but I decline donations.  I started writing spamdyke to meet my own needs.
+I continue writing it as a hobby, not to make money.  I get much more pleasure and motivation from reading thank-you emails than
+I would from the occasional donation.
+</p><p>
+If you want to help, there are several ways:
+<ul>
+<li>Spread the word about spamdyke.  Let others know, create links to this site, post an article on your blog, etc.  Everyone hates spam and statistics are very persuasive.</li>
+<li>Join the spamdyke-users mailing list and help answer questions.  The spamdyke community is growing and it needs support.</li>
+<li>Proofread the documentation and suggest improvements.  Write tutorials for installing spamdyke.  Translate existing documentation into other languages.</li>
+<li>If you are a C programmer, send an email to <a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> and volunteer to implement a new feature.</li>
+</ul>
+</p>
+
+<a name="FEATURE1"></a>
+<h2>Does spamdyke run its filters in any particular order?</h2>
+<p>
+Yes.  spamdyke evaluates its filters in the following order (of course a filter
+is skipped if it's disabled):
+<dl>
+<dd>Check if mail is being accepted or filtered at all
+<dd>Check for an rDNS name
+<dd>Check for an IP address in a country code rDNS name
+<dd>Check for an rDNS whitelist entry
+<dd>Check for an rDNS blacklist entry
+<dd>Check for an IP whitelist entry
+<dd>Check for an IP blacklist entry
+<dd>Check for an IP address and keyword in the rDNS name
+<dd>Check if the rDNS name resolves
+<dd>Check DNS whitelists
+<dd>Check right-hand-side whitelists
+<dd>Check DNS RBLs
+<dd>Check right-hand-side blacklists
+<dd>Check for earlytalkers
+</dl>
+</p><p>
+The intent is to order the filters from least-to-most expensive, so connections
+will be rejected as quickly as possible.  In a typical setup, DNS queries are
+more expensive than file searches, pattern matching is more expensive than
+simply checking for a file's existence, etc.
+</p><p>
+The following filters are all checked during the SMTP conversation.
+<dl>
+<dd>Check sender whitelists
+<dd>Check right-hand-side whitelists for the sender's domain name 
+<dd>Check sender blacklists
+<dd>Check right-hand-side blacklists for the sender's domain name 
+<dd>Check for sender's domain MX record
+<dd>Check if the sender's address matches the authentication username
+<dd>Check recipient whitelists
+<dd>Block relaying from unauthorized remote hosts
+<dd>Limit the number of recipients
+<dd>Check for identical sender and recipient addresses
+<dd>Check recipient blacklists
+<dd>Block unqualified recipient addresses
+<dd>Block invalid/unavailable recipient addresses
+<dd>Graylisting
+</dl>
+</p><p>
+The following filters are checked while the message body is being sent.
+<dl>
+<dd>Check header blacklists
+</dl>
+</p><p>
+If spamdyke is passing TLS traffic to qmail without processing (i.e.
+spamdyke wasn't compiled with TLS support or doesn't have access to the server
+certificate), spamdyke can't see the SMTP conversation.  In that situation,
+none of the filters in the second or third group are run.
+</p><p>
+When spamdyke's <code>config-dir</code> option is in use, no filters are
+run before the remote server gives the recipient's address.  This is
+because spamdyke must load any additional configuration files before it
+will know which filters to run.  This doesn't change spamdyke's effectiveness
+at all, it only (slightly) delays when a rejection message is first sent to the
+remote server.
+</p>
+
+<a name="FEATURE2"></a>
+<h2>If spamdyke checks IP blacklists before it checks sender whitelists, will whitelisted senders from blacklisted IPs be blocked?</h2>
+<p>
+No.  Whitelists (all whitelists) <b>always</b> override all blacklists and all other filters.
+The order in which spamdyke checks the whitelists is not relevant; spamdyke will check all whitelists
+before it rejects a connection.
+</p>
+
+<a name="FEATURE3"></a>
+<h2>My users authenticate with SMTP AUTH.  Can I still use spamdyke?</h2>
+<p>
+Yes!  As of version 2.5.0, spamdyke understands SMTP AUTH and disables all of
+its filtering for authenticated users.
+</p><p>
+See the <a href="README.html">README page</a> for complete details.
+</p>
+
+<a name="FEATURE4"></a>
+<h2>My users authenticate with POP3-before-SMTP.  Can I still use spamdyke?</h2>
+<p>
+Probably not.  If your POP3 server writes authenticated IP addresses to
+a file, you can use that file as an IP whitelist with spamdyke.  If it keeps
+track of authenticated IP addresses in some other way, you're out of luck.
+</p><p>
+For example, Plesk supports POP3-before-SMTP but it writes the authenticated IP addresses to its
+database, which spamdyke cannot read.
+</p><p>
+POP3-before-SMTP is really a kludge anyway; consider using SMTP AUTH instead.
+</p>
+
+<a name="FEATURE5"></a>
+<h2>I want to block all emails unless the sender authenticates.  Can spamdyke do that?</h2>
+<p>
+Yes!  As of version 4.0.0, spamdyke accepts the <code>smtp-auth-level</code> option.  When it is set to <code>require-auth</code>,
+all connections are rejected unless the sender has authenticated.
+</p><p>
+Prior to version 4.0.0, the easiest way to accomplish this was to first enable SMTP AUTH.  Then, create an IP blacklist file that will block all IP addresses:
+<dl>
+<dd><code>0.0.0.0/0.0.0.0</code>
+</dl>
+spamdyke will disable its filters for authenticated users and block everyone else.
+</p>
+
+<a name="FEATURE6"></a>
+<h2>Does spamdyke support TLS?</h2>
+<p>
+As of version 2.6.0, spamdyke supports TLS (which is just another name for SSL).
+spamdyke will detect TLS and pass it through seamlessly.  Obviously, none of its
+post-connect filters will work (e.g. graylisting) because all of the traffic will
+be encrypted.
+</p><p>
+However, if spamdyke has access to a server certificate, it will handle the TLS
+itself and all of its filters will work as before.  Bonus: spamdyke will provide
+TLS even if your qmail has not been patched to provide TLS!
+</p><p>
+As of version 4.0.0, spamdyke supports SMTP-over-SSL (SMTPS) when the <code>tls-level</code>
+option is set to <code>smtps</code>.
+</p><p>
+See the <a href="README.html">README page</a> for complete details.
+</p>
+
+<a name="FEATURE7"></a>
+<h2>I want to whitelist a large number of IP addresses; can I use wildcards?</h2>
+<p>
+Yes, as of spamdyke version 2.2.0.  The whitelist and blacklist IP
+files will work with partial IP addresses to represent ranges.
+</p><p>
+As of spamdyke version 2.4.0, whitelist and blacklist IP files can also
+contain IP addresses as dotted quad IP address followed by a netmask as a number
+of bits.  Also, spamdyke supports dotted quad IP addresses followed by a netmask
+as a dotted quad.
+</p><p>
+As of spamdyke version 3.0.0, whitelisted IP addresses can also be found
+by using a DNS realtime whitelist.  This is like a DNS RBL that lists whitelisted
+IP addresses instead of blacklisted ones.
+</p><p>
+For complete details, see the <a href="README.html">README page</a>.
+</p>
+
+<a name="FEATURE8"></a>
+<h2>I want to disable some filters for a few domains (or users) and enable them for everyone else.  Is that possible?</h2>
+<p>
+Yes, as of spamdyke version 4.0.0.  Configuration directories allow per-domain
+configuration of most of spamdyke's features.
+</p><p>
+For example, imagine the following scenario:
+The system administrator wants to check all connections for rDNS names (<code>reject-missing-rdns</code>),
+for rDNS name resolution (<code>reject-unresolvable-rdns</code>) and for their IP address
+with a keyword in their rDNS name (<code>ip-in-rdns-keyword-blacklist-file</code>).  However, the
+recipients in one domain, example.com, don't like the unresolvable rDNS name filter or the
+keyword filter; they want those two disabled.
+</p><p>
+To accomplish this, spamdyke's main configuration file might contain the following
+options:
+<dl>
+<dd><code>reject-missing-rdns=1</code></dd>
+<dd><code>reject-unresolvable-rdns=1</code></dd>
+<dd><code>ip-in-rdns-keyword-blacklist-file=/etc/spamdyke/rdns_keywords.txt</code></dd>
+<dd><code>config-dir=/etc/spamdyke/config.d</code></dd>
+</dl>
+To disable the two filters for all recipients at example.com, the following options
+would appear in a file named <code>/etc/spamdyke/config.d/_recipient_/com/example</code>:
+<dl>
+<dd><code>reject-unresolvable-rdns=0</code></dd>
+<dd><code>ip-in-rdns-keyword-blacklist-file=!!!</code></dd>
+</dl>
+To accomplish this for a specific user instead of an entire domain, a longer filename is
+used.  For example, to do the above scenario for joe@example.com instead of all users in
+example.com, the file would be named <code>/etc/spamdyke/config.d/_recipient_/com/example/_at_/joe</code>.
+Configuration directories can be used to accomplish many complex tasks.  For example,
+if the file for a specific domain contained options to read blacklist and whitelist
+files from the domain owner's home directory, the domain owner could update their own
+blacklists and whitelists without help from the system administrator!
+</p><p>
+For complete details, see the <a href="README.html#CONFIGURATION_DIR">Configuration Directory documentation</a>.
+</p>
+
+<a name="FEATURE9"></a>
+<h2>My users' PCs are infected with spambots and are sending spam through my server.  Can I force them to authenticate to block the spam?</h2>
+<p>
+Yes.  See the above question (<a href="#FEATURE8">I want to disable some filters for a few domains (or users) and enable them for everyone else.  Is that possible?</a>).
+In the configuration directory for each of your local domains, add the option:
+<dl>
+<dd><code>filter-level=require-auth</code></dd>
+</dl>
+</p>
+
+<a name="FEATURE10"></a>
+<h2>I want to stop backscatter spam by blocking all messages to invalid or non-existant recipient addresses.  Can spamdyke do that?</h2>
+<p>
+As of version 5.0.0, it can.  Using the <code>reject-recipient</code> and <code>recipient-validation-command</code> options,
+spamdyke can use the same control files as qmail to determine where an incoming message will
+be delivered, then reject the recipient address if it is going to bounce.  It does this by using qmail's actual configuration files and parsing them the same way qmail does.
+In other words, it's not necessary to maintain a separate list of valid addresses on your server.  As soon as an address is created or removed, spamdyke will accept or
+reject it.
+</p><p>
+<b>NOTE:</b> This feature is not needed on Plesk servers -- Plesk already includes a filter to block invalid recipients by default.
+</p><p>
+qmail's recipient validation procedure is incredibly complicated -- there are over 167 <i>thousand</i> different ways an address might be valid or invalid.
+Before you ask, yes, spamdyke has been tested against every single one of them.
+It's worth looking at the flowchart in the documentation folder just to get an idea of how big the task really is.
+</p>
+
+<a name="FEATURE11"></a>
+<h2>Why does spamdyke-qrv have to be marked setuid root?  Setuid binaries are evil incarnate!</h2>
+<p>
+Unfortunately, running spamdyke-qrv as root is the only way to access all of the files needed to validate a recipient on a qmail server.
+Recipient validation requires reading most of the files in <code>/var/qmail/control</code> and <code>/var/qmail/users</code>, reading
+files from within users' (or domains') mail directories and sometimes reading files from home directories of system accounts.
+On most qmail servers, there is no single non-root user who has access to all of those files.
+</p><p>
+spamdyke-qrv was created as a separate program with as little code as necessary to validate a single address and exit.
+This way, the entire spamdyke binary will not need to run as root and it should be easier to verify its security (please do).
+</p><p>
+If you don't want to allow spamdyke-qrv to run as root, that is entirely your choice.  You just won't be able to use the recipient
+validation feature without it.
+</p>
+
+<a name="SUGGESTION0"></a>
+<h2>On the mailing list, you often promise changes in an upcoming version.  How can I find out what you're working on?</h2>
+<p>
+The easiest way is to simply ask.  Send an email.
+</p><p>
+Other than that, check out the <a href="development_notes/TODO.txt">TODO.txt file</a>.
+The file contains notes to indicate the intended major changes
+in the next few versions.  Those notes are not a completely accurate predictor of
+what will happen but they'll give you an idea of what's happening.
+</p>
+
+<a name="SUGGESTION1"></a>
+<h2>Why doesn't spamdyke use CDB files or a database?  A database would be faster and better
+than text files and strange directory structures!</h2>
+<p>
+First, you should know CDB files are not the super-efficient silver bullet you may have read about.
+Processing a CDB file is computationally expensive, which doesn't pay off unless there are thousands of entries.
+With fewer entries, a flat text file is faster.  As the number of entries grows beyond a few thousand, CDB files
+become less and less efficient.  Also, CDB files cannot be modified once they are written;
+the only way to add/edit/delete records is to recreate the entire file from its original source(s).
+</p><p>
+Reasons why files and directory structures are preferable to databases:
+<ol>
+<li><b>Speed.</b>  Because spamdyke doesn't run as a daemon, a database 
+engine must be loaded and initialized for every incoming connection. 
+That takes time, so the database engine must be <i>very</i> fast to keep the 
+overall time lower than using plain text files.</li>
+<li><b>Memory.</b>  Because one copy of spamdyke is started for every 
+incoming connection, memory usage is a big concern on busy servers.  Most 
+qmail installations use DJB's softlimit program to limit memory usage 
+for exactly this reason.  Database libraries use memory, often quite a 
+bit, to load/cache/parse data.  spamdyke must be able to fit within a 
+reasonable limit.</li>
+<li><b>Concurrency.</b>  On a busy mail server, hundreds (possibly thousands) 
+of spamdyke processes could be running at the same time.  A database 
+engine would have to handle that kind of simultaneous access without 
+failing.</li>
+<li><b>Portability.</b>  At the moment, spamdyke runs on every Unix-like 
+platform I've tested.  The only external library it uses is OpenSSL (for 
+TLS support) and even that is optional.  I believe spamdyke's simplicity 
+is largely responsible for its popularity -- nothing extra must be 
+installed, no existing programs must be recompiled.  Requiring a mail 
+server administrator to install a database engine could scare away 
+potential users.</li>
+<li><b>Accessibility.</b>  By using only plain text files and
+directories, spamdyke is easy for anyone to administer and reconfigure 
+with standard command line tools.  Any administrator can understand a 
+file of whitelisted IP addresses without help.  Very few administrators 
+know SQL.  This is very important to me -- I hate proprietary file 
+formats that can only be accessed with special tools.  I can't remember 
+how many times I've stared at a malfunctioning Sendmail server and been 
+unable to determine if a given option was even available, much less 
+enabled.  This point and the next point are very closely related.</li>
+<li><b>Safety.</b>  Plain text files and directories are easy to understand, 
+easy to back up and easy to restore.  They can be printed out, emailed, 
+imported into other programs, etc.  Most importantly, it's very 
+difficult to corrupt a plain text file by "improperly" stopping spamdyke 
+or losing power.  In an emergency, when an administrator is trying to 
+restore a mail server while users are screaming at him, I don't want him 
+wondering if spamdyke's files are intact.  If he has any doubts, he 
+should be able to visually verify them with any available text editor.
+(Microsoft Exchange Server, I'm looking at you here.)</li>
+<li><b>Availability.</b>  Mail servers should depend on as few external 
+systems as possible.  spamdyke already depends heavily on DNS but that's 
+unfortunately unavoidable.   I've done everything I can to make sure 
+spamdyke fails gracefully if DNS is down.  Fortunately, DNS servers are 
+(usually) very stable and very reliable.  Database engines are not in 
+the same league -- while many databases are fairly reliable they still 
+have much higher downtime than DNS servers.  As stated above, I don't want to 
+force a stressed administrator to restore his database server just to 
+get mail flowing again.  If I were forced to do that, I would choose 
+instead to uninstall spamdyke (and I would never use it again).</li>
+</ol>
+</p><p>
+Database servers like MySQL conflict with all 7 points.
+Embedded database engines like SQLite conflict with points 1, 2, 5 and 6.
+CDB files conflict with points 5 and 6.
+</p><p>
+This doesn't mean spamdyke will <i>never</i> use a database.
+It just means there's a lot to think about.  A database
+would have to solve a really tough problem before it would be considered.
+Whether it saves some coding time is really not a factor -- the 
+time required to install and administer spamdyke is more important.
+</p>
+
+<a name="SUGGESTION2"></a>
+<h2>Why doesn't spamdyke filter using Sender Policy Framework (SPF), Sender ID, Certified Server Validation (CSV),
+DomainKeys or DomainKeys Identified Mail (DKIM)?</h2>
+<p>
+Each of those systems is very complex, so adding support to
+spamdyke will not be a small task.  They're also all different, so supporting
+all of them would be a major undertaking.  At this point, there are other ways
+to improve spamdyke that will take less effort and provide much more benefit.
+</p><p>
+Additionally, I'm not convinced any of those systems will make any difference.
+They were each designed to prevent spam being sent from forged addreses so, for
+example, you won't get spam from president@whitehouse.gov.  However, most
+spammers own their domains (often many thousands of them) and control their
+own DNS, so they can (and do) add SPF/CSV/etc records so their spam follows the
+SPF/CSV/etc rules.  (Hint: Spammers understand and administer their DNS records
+better than most ISPs do.)  The major ISPs (AOL, Yahoo!, GMail) use these
+systems and still have spam problems; this is pretty good evidence they aren't
+living up to the hype.
+</p><p>
+There is a (small) chance these systems could stop spam coming from botnets.
+If that happens however, the spammers will just start relaying their spam
+through the compromised machine's ISP's mail servers.  (Hint: That's why having every
+ISP block all outbound port 25 traffic won't stop botnet spam either.)
+</p><p>
+If you really, really want to filter your email using one or more of these
+frameworks, try using SpamAssassin.  It already supports most of them and you'll
+be able to judge their effectiveness for yourself.
+</p>
+
+<a name="SUGGESTION3"></a>
+<h2>Why can't spamdyke filter based on message headers like "From:" or "Received:"?</h2>
+<p>
+As of version 4.3.0, it can.
+See the <a href="README.html">README page</a> for complete details.
+</p>
+
+<a name="SUGGESTION4"></a>
+<h2>Why can't spamdyke block large messages or strip attachments?</h2>
+<p>
+Since header blacklisting was added in version 4.3.0, this may now be possible.
+However, it will require buffering the incoming message into a file on disk;
+with large attachments being so common, there is no way spamdyke could possibly
+(or responsibly) buffer entire messages in memory.
+</p><p>
+Look for this feature in a future version.
+</p>
+
+<a name="SUGGESTION5"></a>
+<h2>My graylist directories are getting huge -- many, many entries.  Is this is a problem?  What can I do?</h2>
+<p>
+For most servers, it isn't a problem, since most of the files contain no data.  However,
+it might be a problem if the server's filesystem runs out of inodes. (An inode is basically
+a file index within the filesystem.  The number of available inodes is large but not infinite;
+when a file system runs out of inodes, no new files can be created even though there is available disk space.)
+</p><p>
+On most Unix-like systems, the <code>df</code> command will show the amount of free
+space on all of the mounted filesystems.  To show the number of available inodes, use
+the command <code>df -i</code>.
+</p><p>
+To remove old graylist files on systems with GNU tools installed, the following command
+should work:
+<dl>
+<dd><code>find GRAYLIST_FOLDER -type f -mmin +$[SPAMDYKE_MAX_GRAYLIST_SECS/60] -print0 | xargs -0 rm -f</code>
+</dl>
+Be sure to replace <code>GRAYLIST_FOLDER</code> with the path to your graylist directory, as
+given in the spamdyke command line or configuration file.  Also replace <code>SPAMDYKE_MAX_GRAYLIST_SECS</code>
+with the maximum graylist age from the spamdyke command line (-M) or configuration file.
+</p><p>
+Be careful about deleting graylist entries -- it is possible to be too aggressive and
+delete them before the remote server(s) have finished delivering their message(s).  If
+the entries disappear while a remote server is still trying to pass the filter, it will
+be graylisted again (and again and again).  Eventually, the remote server wil stop retrying
+and the message will bounce back to the sender.  To avoid this, you shouldn't delete any graylist
+entries that are less than two weeks old.
+</p>
+
+<a name="SUGGESTION6"></a>
+<h2>Why can't spamdyke automatically delete old graylist entries?</h2>
+<p>
+spamdyke doesn't automatically delete old graylist entries because it doesn't run as a
+daemon.  In other words, spamdyke doesn't run constantly on the server.  It only runs
+while a message is being received.  If spamdyke suddenly decided to clean up the graylist
+directory, it would have to do that work while receiving an incoming email message.
+</p><p>
+If your graylist directory is large, the cleanup could cause a large enough delay 
+to bounce the message.  Also, how is spamdyke to decide when to cleanup?  Because
+a new spamdyke process is started for each incoming connection and those processes
+don't communicate with each other, there's a good chance multiple spamdyke
+instances would attempt to cleanup the directory at the same time.  That would delay
+multiple incoming messages and place an unnecessary load on the server.
+</p>
+
+<a name="SUGGESTION7"></a>
+<h2>Instead of trying to prevent relaying itself, why doesn't spamdyke just set the <code>RELAYCLIENT</code>
+environment variable based on authentication/sender address/recipient address?</h2>
+<p>
+Unfortunately, that isn't possible because of the way environment variables work.
+</p><p>
+Some background: environment variables are set when a program is started.  Most of us
+think of them in terms of the login shell (e.g. bash), which keeps a list of environment variables
+to set for every process it starts (i.e. when commands are typed at the prompt).
+However, each process that runs on a system has an environment, set by the process that
+started it (the parent process).  Once the child process has been started, the parent
+process cannot alter its environment any more.
+</p><p>
+More background: when the <code>RELAYCLIENT</code> environment variable is set before
+<code>qmail-smtpd</code> is started, qmail will allow the connection to relay.  Typically,
+<code>RELAYCLIENT</code> is set in the access file (e.g. <code>/etc/tcp.smtp</code>) based
+on the IP address of the remote server.
+</p><p>
+spamdyke must determine what environment variables to set before it starts the
+<code>qmail-smtpd</code> process (because after <code>qmail-smtpd</code> has been
+started, spamdyke can't change its environment).  For that reason, spamdyke always sets
+the <code>RELAYCLIENT</code> environment if it has enough information to run its relaying
+filter.  That way, <code>qmail-smtpd</code> will not prevent relaying
+if spamdyke determines it is allowed (e.g. because the connection is authenticated).
+</p><p>
+spamdyke sets <code>RELAYCLIENT</code> and controls relaying if any of these conditions are true:
+<ul>
+<li>The <code>relay-level</code> option is <code>allow-all</code>.
+<li>The remote IP address is given with the <code>ip-relay-entry</code> option.
+<li>The remote IP address is listed in a file given with the <code>ip-relay-file</code> option.
+<li>The rDNS name is given with the <code>rdns-relay-entry</code> option.
+<li>The rDNS name is listed in a file given with the <code>rdns-relay-file</code> option.
+<li>The <code>smtp-auth-level</code> option is <code>ondemand</code>, <code>ondemand-encrypted</code>, <code>always</code>, or <code>always-encrypted</code>.
+</ul>
+</p>
+
+<a name="SUGGESTION8"></a>
+<h2>Why can't spamdyke automatically blacklist (or delay) servers that are rejected too many times?</h2>
+<p>
+Technically, this is not possible because spamdyke of the way spamdyke works.  Without a long-running
+daemon to keep track of the statistics and "penalties", each instance of spamdyke would have to perform
+the accounting work on its own.  This would take too long and is very likely to be error-prone.
+</p><p>
+However, even if it were possible, this kind of feature is very problematic, for several reasons.
+<ol>
+<li>The only way spamdyke could possibly decide to block a server would be to examine its rejection
+statistics (i.e. number of rejections per time period exceeds a threshold).  However, if spamdyke
+is already rejecting messages, what is the purpose of blacklisting the server?  In effect, that would
+enable two filters for blocking a server when one is already enough.
+<li>Innocent mistakes by users of large email systems could unfairly penalize every user of
+that system.  For example, if an AOL user sends several messages that are rejected, an
+automatic blacklist might block all messages from all AOL users.  This is not acceptable.
+<li>Malicious users could use an automatic blacklist to conduct a denial-of-service attack.
+By sending multiple invalid messages from a victim's server, an attacker could cause the
+automatic blacklist to block all messages from the victim server.
+</ol>
+</p><p>
+In summary, an automatic blacklist is likely to cause more problems than it solves.  For that
+reason, spamdyke is unlikely to ever contain such a feature.
+</p><p>
+However, just because spamdyke doesn't offer an automatic blacklist doesn't mean one can't be
+created.  A script that analyzes spamdyke's logs and modifies a blacklist file would be just
+as effective.
+</p>
+
+<a name="SUGGESTION9"></a>
+<h2>Why doesn't spamdyke's graylist filter use the IP address of the remote server?</h2>
+<p>
+At first glance, it seems more effective to use three criteria for graylisting: the sender's email
+address, the recipient's email address and the remote server's IP address.  Many graylist filters
+do this.  Whether it actually stops more spam is questionable.
+</p><p>
+However, using the remote server's IP address often causes more problems than it solves.
+To understand why, consider a large mail service like GMail, Yahoo! or AOL.  Such providers handle
+so many messages that they must use dozens of outbound servers to keep up with the load.  Imagine
+this scenario:
+<ol>
+<li>A user on a large provider sends a message.
+<li>Server 1 attempts to deliver it.  The graylist filter creates a graylist entry and rejects the connection.
+<li>Server 1 puts the message back in the queue to retry later.
+<li>Some time later, server 2 grabs the message and attempts to deliver it. Server 2's IP address is different from server 1's,
+so the graylist filter creates a new entry and rejects the connection.
+<li>Server 2 puts the message back in the queue to retry later.
+<li>Some time later, server 3 grabs the message and attempts to deliver it. Server 3's IP address is different from server 1's and server 2's,
+so the graylist filter creates a new entry and rejects the connection.
+<li>Server 3 puts the message back in the queue to retry later.
+<li>...repeat...
+<li>The message is never delivered and bounces back to the sender.
+</ol>
+By disregarding the remote server's IP address, spamdyke avoids this problem.
+</p>
+
+<a name="TROUBLE1"></a>
+<h2>Graylisting isn't working!  What am I doing wrong?</h2>
+<p>
+Most often, graylisting doesn't work because there are no domain directories.  spamdyke is
+designed to allow some flexibility when configuring graylisting, so you can enable it for
+some domains and disable it for others.
+</p><p>
+As of version 4.0.0, spamdyke can automatically create domain directories as they are needed.
+To enable this, look at spamdyke's <code>graylist-level</code> option.  If it is <code>always</code>,
+change it to <code>always-create-dir</code>.  If it is <code>only</code>, change it to
+<code>only-create-dir</code>.
+</p><p>
+To enable graylisting for a domain without enabling automatic directory creation, you must create
+a directory within your graylist directory named for the domain you want to graylist.  For
+example, suppose you created a graylist directory:
+<dl>
+<dd><code>/home/vpopmail/graylist.d</code>
+</dl>
+Then you ran spamdyke with a command line like this:
+<dl>
+<dd><code>/usr/local/bin/spamdyke -g /home/vpopmail/graylist.d ...</code>
+</dl>
+No graylisting will take place.  To enable graylisting for the domain <code>example.com</code>, you must also create
+another directory:
+<dl>
+<dd><code>/home/vpopmail/graylist.d/example.com</code>
+</dl>
+Once you've done that, graylisting will begin for all recipients within the <code>example.com</code>
+domain.  Create a directory for each domain you want to graylist.
+</p><p>
+spamdyke can automatically catch configuration problems like this.  See the <a href="README.html">README page</a>
+for details.
+
+<a name="TROUBLE2"></a>
+<h2>I want to use spamdyke but some of my users roam and connect from strange
+places.  How can I allow them to send email but still filter spam?</h2>
+<p>
+As of version 2.5.0, this is no problem.  spamdyke understands SMTP AUTH, so
+it can authenticate your users and bypass all of its filtering just for them.
+Bonus: spamdyke will provide SMTP AUTH even if your qmail has not been
+patched to provide SMTP AUTH!
+</p><p>
+See the <a href="README.html">README page</a> for complete details.
+</p>
+
+<a name="TROUBLE3"></a>
+<h2>I installed spamdyke and now I'm seeing a lot of timeouts in my logs.  Why?</h2>
+<p>
+Badly written software on the remote hosts.  It seems a lot of spam software
+doesn't handle error codes at all.  It just attempts delivery and expects
+success.  When an error code is sent, the software just sits and waits for the
+success code it wants.  Eventually, the connection times out.  Sometimes, a
+remote server will take a long time to begin delivering a large (legitimate)
+message, which can cause timeouts.
+</p><p>
+qmail enforces a 20 minute idle timeout but it does so silently (no logging).
+It's possible you were already getting timeouts and just didn't know it until spamdyke began
+logging them.
+</p><p>
+If you suspect legitimate connections are timing out, there are two things you
+can do.  First, you can increase or disable spamdyke's timeouts.  Of course,
+qmail's 20 minute idle timeout will still apply but at least you'll be back
+where you were before.
+</p><p>
+Second, you can use spamdyke's full logging feature to log all incoming
+connections to files.  The log files contain timestamps so you can see how
+quickly the remote server is sending data and where it's stopping.  Hopefully
+that will yield some clues you can use to fix the problem.
+</p>
+
+<a name="TROUBLE4"></a>
+<h2>I installed spamdyke and now my server is very slow!  Incoming connections
+have to wait 20 seconds or longer before they see the greeting banner.  What
+can I do speed it up?</h2>
+<p>
+Most often, delays like these are due to DNS traffic.  Depending on the enabled filters,
+spamdyke can perform the following DNS queries for <u>each</u> incoming connection:
+<ol>
+<li>Find the reverse DNS name for the remote server
+<li>Find the IP address for the remote server's reverse DNS name
+<li>Check the realtime whitelists for TXT records matching the remote server's IP address
+<li>Check the realtime whitelists for A records matching the remote server's IP address
+<li>Check the realtime blacklists for TXT records matching the remote server's IP address
+<li>Check the realtime blacklists for A records matching the remote server's IP address
+<li>Check the righthand-side whitelists for TXT records matching the remote server's rDNS name
+<li>Check the righthand-side whitelists for A records matching the remote server's rDNS name
+<li>Check the righthand-side blacklists for TXT records matching the remote server's rDNS name
+<li>Check the righthand-side blacklists for A records matching the remote server's rDNS name
+<li>Check the righthand-side whitelists for TXT records matching the sender's domain name
+<li>Check the righthand-side whitelists for A records matching the sender's domain name
+<li>Check the righthand-side blacklists for TXT records matching the sender's domain name
+<li>Check the righthand-side blacklists for A records matching the sender's domain name
+</ol>
+That's a lot of queries.  If your DNS servers aren't fast enough to keep up, you're
+going to see delays in spamdyke.  To alleviate this, try installing a caching nameserver
+on your mail server (most operating systems have a pre-built package for this).
+If you still see delays, begin disabling DNS-based filters until spamdyke begins running faster.
+</p><p>
+If you have disabled all of the filters and spamdyke is still running slowly, you may
+have found a bug.  Please report it!
+</p>
+
+<a name="TROUBLE5"></a>
+<h2>I use spamdyke to prevent relaying (because my qmail isn't patched to provide
+SMTP AUTH) but SpamAssassin has stopped scanning incoming messages.  What gives?</h2>
+<p>
+You must be using qmail-scanner from <a href="http://qmail-scanner.sourceforge.net/">qmail-scanner.sourceforge.net</a>.  That
+package has an interesting flaw: it assumes any time the environment variable
+<code>RELAYCLIENT</code> is set, no scanning should be performed.  When spamdyke prevents
+relaying, it always sets that variable to keep qmail from interfering with its
+relaying decision.
+</p><p>
+To reenable scanning, modify your /etc/tcp.smtp file and add <code>QS_SPAMASSASSIN</code>
+to all of the connections you want scanned.  For example:
+<dl>
+<dd><code>127.:allow,RELAYCLIENT="",QMAILQUEUE="/var/qmail/bin/qmail-scanner-queue"</code>
+<dd><code>:allow,QMAILQUEUE="/var/qmail/bin/qmail-scanner-queue",QS_SPAMASSASSIN=""</code>
+</dl>
+Rebuild the CDB file with <code>qmailctl cdb</code> and you should be fine.
+</p>
+
+<a name="TROUBLE6"></a>
+<h2>My logs contain the message <code>ERROR: unable to write X bytes to file descriptor 1: Broken pipe</code>.
+What does it mean?</h2>
+<p>
+The message means spamdyke was trying to send some data to the remote server, but the connection
+was closed before all of the data was sent.  This can indicate a problem (which is why spamdyke
+logs it) but most often it indicates a spammer's server disconnected as soon as it received an
+error message.
+</p><p>
+This error is usually safe to ignore.  You can prevent it from being logged by lowering spamdyke's
+<code>log-level</code> setting.
+</p>
+
+<a name="TROUBLE7"></a>
+<h2>When I use the <code>config-test</code> feature on my Plesk server, the SMTP AUTH
+tests always fail.  But I know authentication works, so what's wrong?</h2>
+<p>
+Plesk uses a program called <code>relaylock</code> to provide some of the features spamdyke
+includes.  One of <code>relaylock</code>'s jobs is to offer (and probably process) SMTP AUTH.
+</p><p>
+However, <code>relaylock</code> won't offer SMTP AUTH to connections that come from the
+local host.  It uses the <code>TCPREMOTEIP</code> environment variable to determine the
+IP address of the connecting server.  Try setting it to something other than the localhost
+IP.  Within the bash shell, you can use this command:
+<dl>
+<dd><code>export TCPREMOTEIP=11.22.33.44</code></dd>
+</dl>
+Within the zsh shell, this command will work:
+<dl>
+<dd><code>setenv TCPREMOTEIP 11.22.33.44</code></dd>
+</dl>
+If the <code>TCPREMOTEIP</code> environment variable isn't set at all, spamdyke should
+set it to <code>0.0.0.0</code> before it starts its tests.
+</p>
+
+<a name="TROUBLE8"></a>
+<h2>Why isn't spamdyke blocking messages from some blacklisted servers/senders/recipients?</h2>
+<p>
+Most likely, the problem is TLS.  If the remote server is using TLS to encrypt its transmission
+and spamdyke doesn't have access to the certificate (using the <code>tls-certificate-file</code> option),
+spamdyke can't decrypt the traffic to monitor the entire connection.  In that situation, spamdyke
+will not block the connection if there is any chance it could be allowed.
+</p><p>
+For example, if the remote server should be blocked because its IP address is blacklisted, spamdyke
+normally won't reject the connection until it has exhausted every opportuntity to be allowed.  If
+SMTP AUTH is possible, spamdyke must wait to see if the server authenticates.  If sender or
+recipient whitelists are in use, spamdyke must wait to see if any of those whitelists are matched.
+However, when TLS is in use and spamdyke can't decrypt the traffic, the SMTP AUTH, the sender and
+the recipient will all be hidden.  spamdyke must allow the connection to continue just in case.
+</p><p>
+Most of the time, when qmail provides TLS for a connection, it will use the text
+<code>(DHE-RSA-AES256-SHA encrypted)</code> in the <code>Received</code> header entry it adds to
+the top of the message.  If you see that text in the headers of messages that spamdyke should be
+blocking, TLS is the issue.  Change spamdyke's configuration so it can decrypt the TLS traffic
+and it will block the connections.
+</p>
+
+<a name="TROUBLE9"></a>
+<h2>I can't figure out why spamdyke isn't working correctly -- some features are malfunctioning in
+strange ways <b>OR</b> I'm seeing strange/impossible error messages in my logs.  What's wrong?</h2>
+<p>
+Of course, the most likely explanation is a configuration problem.  The <code>config-test</code>
+feature can help find common mistakes.  You may also have found a bug in spamdyke.
+</p><p>
+However, occassionally very strange malfunctions/errors are reported that no one is able to explain.
+In those cases, the culprit often turns out to be low memory.  The server may have plenty of RAM but
+many qmail installations use DJB's
+<code>softlimit</code> program to limit the amount of memory that can be used by a single connection.
+The limit must allow enough room for spamdyke, qmail and any other filters that have been added.
+Determining the correct limit is simply impossible -- spamdyke uses too many library functions to be
+able to predict how much memory or stack space is appropriate.
+</p><p>
+<b>If you are using the "softlimit" program, stop.
+Remove it, now.</b>
+It causes far, far more problems than it solves (assuming it solves any at all).
+It is "a solution looking for a problem" and a bad tool for modern installations.
+</p><p>
+OK, if you don't believe the above advice, here's a little technical background.
+Unix processes can be limited in a number of ways, including limiting the maximum number of open
+files, maximum open network connections, maximum size of files they can create, etc.  Many of
+these limits make sense -- limiting the number of child processes is easy to understand.
+</p><p>
+However, limiting the amount of memory or stack space is completely different.
+Unix allows processes to allocate much more memory than they actually use -- this is common and very efficient.
+But when a limit is imposed, the most common place to hit the limit is within a system
+library like glibc or OpenSSL.  If spamdyke crashes with "segmentation fault" inside a glibc
+function, what does that mean?  Is there really a bug in glibc?  Unlikely.  It's far more
+likely spamdyke allocated or used <i>almost</i> too much memory, then a function within
+glibc crossed the line and the entire process crashed.
+</p><p>
+This isn't necessarily a bug anywhere -- it's just the way programs work in a Unix environment.
+Neither spamdyke nor glibc were actually going to use all of the memory they allocated, so the
+server would never have run out of RAM.  How does anyone debug this problem?  It's impossible!
+The crash information is useless and the runtime environment can't be reproduced.
+Instead, everyone spends days/weeks trying to track down a problem that doesn't actually exist.
+</p><p>
+Overall, the correct solution is: <b>do not use "softlimit".</b>
+</p>
+
+<a name="TROUBLE10"></a>
+<h2>Why are messages still being rejected even after I've added the sender's domain name to my rDNS whitelist? <b>OR</b>
+Why aren't messages being rejected after I've added the sender's domain name to my rDNS blacklist?</h2>
+<p>
+The rDNS white/blacklist works by matching the remote server's reverse DNS name (the name that is found by querying
+the remote server's IP address through the DNS system).  The sender white/blacklist works by matching the sender's email address.
+</p><p>
+In other words, they're not the same thing at all.  It's very common for reverse DNS names to be different than
+the email domain name, even in the case of large companies.  To allow or block connections based on reverse DNS names (i.e.
+the "origin_rdns" value in spamdyke's log messages), add the name to the rDNS whitelist or blacklist.  To allow or block connections
+based on email domain names (i.e. the "from" value in spamdyke's log messages), add the name to the <u>sender</u> whitelist or blacklist.
+</p>
+
+<a name="TROUBLE11"></a>
+<h2>I enabled the IP-in-rDNS filter, so why isn't spamdyke blocking connections from servers
+with rDNS names that contain IP addresses?</h2>
+<p>
+The IP-in-rDNS filter requires two things to block a connection: the rDNS name must contain the IP address <b>AND</b>
+the rDNS name must contain a keyword.  For example, consider the following rDNS name:
+<dl>
+<dt><code>11.22.33.44.dynamic.example.com</code></dt>
+</dl>
+Obviously it contains an IP address (11.22.33.44), but that's not enough to trigger the filter.
+If the keyword <code>dynamic</code> were supplied, spamdyke would block the connection.
+</p><p>
+However, note that the keyword <code>example</code> would not be matched.  This is because <code>example</code>
+is part of the last two segments of the domain name.  spamdyke will not search for keywords there because
+that would lead to lots of false positives.  It is possible to use a domain name as a keyword, if it is
+prefixed with a dot.  For example:
+<dl>
+<dt><code>.example.com</code></dt>
+</dl>
+All connections would be blocked where the rDNS name contained the IP address and the name ended in <code>.example.com</code>.
+</p>
+
+<a name="TROUBLE12"></a>
+<h2>I'm trying to run spamdyke's <code>config-test</code> feature but it only says "Missing qmail-smtpd command".  What's wrong?</h2>
+<p>
+qmail is a strange beast.  Since it's essentially unmaintained, lots of different distributions and patch sets have been
+produced to add various capabilities.  In fact, spamdyke's primary purpose is to provide missing capabilities without requiring
+qmail to be patched or recompiled.
+</p><p>
+However, not all of spamdyke's filters are needed (or even appropriate) for everyone, depending on exactly what each particular qmail installation
+can do.  For that reason, spamdyke's <code>config-test</code> feature interrogates qmail to see what it can do, then makes
+recommendations based on what it sees.
+</p><p>
+In order to check qmail, spamdyke needs to know the command that is used to start qmail (with all arguments).
+The error "Missing qmail-smtpd command" means the qmail command isn't being supplied on the command line, so spamdyke can't
+start qmail and check it.
+</p><p>
+The correct way to use <code>config-test</code> is to find the full spamdyke/qmail command line in your "run" file (or xinetd config file)
+and run it after adding <code>--config-test</code> near the beginning.
+</p>
+
+</div>
+</div>
+<div id="footer">
+copyright &copy;2015 Sam Clippinger |
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> |
+<a href="http://www.dcarter.co.uk">design by dcarter</a>
+</div>
+</div>
+</body>
+</html>

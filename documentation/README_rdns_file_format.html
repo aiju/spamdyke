@@ -1,0 +1,81 @@
+<!--#set var="SELECTED_DOCUMENTATION" VALUE="selected"-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<title>spamdyke: rDNS File Format</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<link rel="stylesheet" type="text/css" href="http://www.spamdyke.org/style/style.css" />
+<link rel="icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+<div id="main">
+<div id="links_container">
+<div id="logo"><h1>spamdyke</h1><h2>A drop-in connection-time spam filter for qmail</h2></div>
+<div id="links">
+</div>
+</div>
+<div id="menu">
+<ul>
+<li><a href="http://www.spamdyke.org/">Home</a></li>
+<li><a href="http://www.spamdyke.org/download.html">Download</a></li>
+<li><a id="selected" href="#">Documentation</a></li>
+<li><a href="FAQ.html">FAQ</a></li>
+<li><a href="http://www.spamdyke.org/support.html">Support</a></li>
+<li><a href="http://www.spamdyke.org/mailinglists.html">Mailing Lists</a></li>
+<li><a href="http://www.spamdyke.org/links.html">Links</a></li>
+</ul>
+</div>
+<div id="content">
+<!--#include virtual="../includes/rightnav.html"-->
+<div id="column2">
+
+<h2>rDNS files</h2>
+<p>
+Some of spamdyke's options search files for rDNS names.  In all those
+cases, the format of the files is the same.  Blank lines and lines beginning
+with <code>#</code> are ignored.  Every other line in the file is expected to contain a
+single entry.
+</p><p>
+<b>NOTE: To protect against unknown dangers like programming errors, corrupted
+filesystems or incorrect file paths, spamdyke will only read the first 65536 lines
+of any file.  If the file is any larger, spamdyke will printing an error message
+into its logs.  If there is a legitimate reason to have more than 65536 lines in a
+file, the content should be separated into multiple files and spamdyke's option
+should be given multiple times to search each file.</b>
+</p><p>
+Individual names may be given as separate entries.  Those names will be matched
+literally.  For example:
+<dl>
+<dd><code>mail.example.com</code>
+<dd><code>smtp.example.com</code>
+</dl>
+Two names will be matched by these entries, <code>mail.example.com</code> and
+<code>smtp.example.com</code>.
+</p><p>
+The rDNS names may also use wildcards by beginning with dots (<code>.</code>) to match whole domains.  For example,
+if the file contained the following entry:
+<dl>
+<dd><code>.example.com</code>
+</dl>
+The names <code>example.com</code>, <code>mail.example.com</code> and <code>mail.internal.example.com</code> will
+match.  If the file contained the following entry:
+<dl>
+<dd><code>.mail.example.com</code>
+</dl>
+The names <code>mail.example.com</code> and <code>internal.mail.example.com</code> will match but
+<code>example.com</code> and <code>internal.example.com</code> will NOT.
+</p>
+
+</div>
+</div>
+<div id="footer">
+copyright &copy;2015 Sam Clippinger |
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> |
+<a href="http://www.dcarter.co.uk">design by dcarter</a>
+</div>
+</div>
+</body>
+</html>

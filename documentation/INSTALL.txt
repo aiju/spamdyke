@@ -1,0 +1,239 @@
+Installing spamdyke is pretty simple.
+
+1) Have a working qmail installation that runs from tcpserver.  If you can't
+   send and receive email, stop and go to one of the following sites for help:
+     http://www.lifewithqmail.org/
+     http://www.qmailrocks.org/
+     http://www.qmailtoaster.org/
+
+   If you're using QmailToaster, there's no need to install spamdyke by hand.
+   Use the spamdyke installation script in QmailToaster Plus:
+     http://qtp.qmailtoaster.com/
+
+2) Unpack the spamdyke tarball somewhere convenient, like /usr/local/src:
+     cd /some/convenient/path
+     tar -xzvf spamdyke-x.y.z.tgz
+
+3) The fastest way is to change to the "spamdyke" directory, run "configure"
+   and "make".  spamdyke will be compiled with the default options.
+     cd spamdyke-x.y.z/spamdyke
+     ./configure
+     make
+   You shouldn't see any errors or warnings.
+
+   On some older BSD and Solaris installations, the "configure" script will
+   stop with an error message if the getopt_long() function cannot be found
+   in a system library.  This typically means the libgnugetopt package is
+   not available.  After it has been installed, the "configure" script will
+   finish successfully.
+
+   The "configure" script accepts several parameters to add or remove some
+   features from spamdyke:
+     --disable-tls: compiles spamdyke without TLS support.  By default, the
+       "configure" script will include TLS support if it detects the OpenSSL
+       libraries are installed.
+     --without-debug-output: compiles spamdyke without the messages produced
+       when the "log-level" option is set to "debug".  This reduces the size of
+       the spamdyke binary.  By default, the "configure" script will add the
+       debug messages to spamdyke.
+     --with-excessive-output: compiles spamdyke with extra debugging output
+       that is visible when the "log-level" option is set to "excessive".
+       By default, the "configure" script will not add the excessive messages
+       to spamdyke.
+     --with-debug-symbols: compiles spamdyke with debugging symbols so it can
+       be debugged with a debugger like gdb.  This option does not add any
+       visible output or features; it just increases the size of the spamdyke
+       binary.  By default, the "configure" script will not add the debugging
+       symbols to spamdyke.
+     --with-address-sanitizer: compiles spamdyke with the "address sanitizer"
+       extension to catch illegal memory accesses and buffer overflows.  This
+       requires a fairly new version of gcc and the "asan" libraries.  It
+       makes spamdyke much bigger and much slower; it is really only useful
+       for developers to use during testing.
+
+4) Copy the spamdyke executable to /usr/local/bin:
+     su
+     cp spamdyke /usr/local/bin/
+
+5) If you want spamdyke to perform recipient validation and reject invalid
+   recipient addresses, you'll need to compile and install the spamdyke-qrv
+   command as well.
+
+   If you're using Plesk, skip this step.  Plesk already does recipient
+   validation for you.
+
+   Compiling is very easy:
+     cd spamdyke-x.y.z/spamdyke-qrv
+     ./configure
+     make
+
+   Copy the spamdyke-qrv executable to /usr/local/bin:
+     su
+     cp spamdyke-qrv /usr/local/bin/
+     chown root /usr/local/bin/spamdyke-qrv
+     chmod u+s /usr/local/bin/spamdyke-qrv
+
+   The "configure" script accepts several parameters to add or remove some
+   features from spamdyke-qrv:
+     --with-excessive-output: compiles spamdyke-qrv with extra debugging output
+       that is visible when the "-v" flag is given twice.  By default, the
+       "configure" script will not add the excessive messages to spamdyke-qrv.
+     --without-vpopmail-support: compiles spamdyke-qrv without extra logic for
+       supporting vpopmail installations.  Without the vpopmail logic,
+       spamdyke-qrv will report every address within a local domain is valid,
+       even when they would otherwise bounce.
+     --with-debug-symbols: compiles spamdyke-qrv with debugging symbols so it
+       can be debugged with a debugger like gdb.  This option does not add any
+       visible output or features; it just increases the size of the
+       spamdyke-qrv binary.  By default, the "configure" script will not add
+       the debugging symbols to spamdyke-qrv.
+     --with-address-sanitizer: compiles spamdyke-qrv with the "address
+       sanitizer" extension to catch illegal memory accesses and buffer
+       overflows.  This requires a fairly new version of gcc and the "asan"
+       libraries.  It makes spamdyke-qrv much bigger and much slower; it is
+       really only useful for developers to use during testing.
+
+6) Find the script that runs qmail when an incoming connection is established.
+
+   If you followed the instructions at lifewithqmail.org or qmailrocks.org, look
+   for:
+        /service/qmail-smtpd/run
+   If you installed qmail from the Debian packages, look for:
+        /etc/init.d/qmail
+   If your qmail installation is part of Plesk, look for:
+        /etc/xinetd.d/smtp_psa
+
+   Insert the spamdyke command before the "/var/qmail/bin/qmail-smtpd" command.
+   Something like this:
+--------------------------------------------------------------------------------
+   ... /usr/local/bin/spamdyke -FLAGS /var/qmail/bin/qmail-smtpd 2>&1
+--------------------------------------------------------------------------------
+   Sometimes, the spamdyke command should be placed within a variable that is
+   substituted into the command line.  If the script includes the rblsmtpd
+   command, it can be replaced with the spamdyke command.
+
+   Older installations of qmail may use the "softlimit" program as well.  If you
+   see softlimit in the sequence of commands, REMOVE IT!  softlimit causes many
+   more problems than it could ever possibly solve.
+
+   Most spamdyke installations use a configuration file named
+   "/etc/spamdyke.conf". This file is not part of the spamdyke installation; it
+   must be created by each administrator.  There is a sample configuration file
+   in spamdyke's "documentation" folder to help you get started.
+
+   Special note for Plesk users: starting relaylock before spamdyke can cause
+   some (harmless) errors to be logged.  If spamdyke is started before relaylock,
+   you shouldn't see any errors:
+--------------------------------------------------------------------------------
+   server_args = -Rt0 /usr/local/bin/spamdyke -FLAGS /var/qmail/bin/relaylock /var/qmail/bin/qmail-smtpd /var/qmail/bin/smtp_auth /var/qmail/bin/true /var/qmail/bin/cmd5checkpw /var/qmail/bin/true
+--------------------------------------------------------------------------------
+   Plesk users can also use spamdyke for their SMTPS connections by adding it to
+   the /etc/xinetd.d/smtps_psa file.  spamdyke's configuration in that file will
+   need to include the options "tls-level" (set to "smtps") and
+   "tls-certificate-file".
+
+   Run the spamdyke command with the "-h" option to see the available options and
+   read the README.html file for full details.  Please don't enable a feature if
+   you don't understand what it does!
+
+7) Restart qmail.
+
+   If you followed the instructions at lifewithqmail.org or qmailrocks.org:
+        svc -d /service/qmail-smtpd
+        svc -u /service/qmail-smtpd
+   If you installed qmail from the Debian packages:
+        /etc/init.d/qmail restart
+   If your qmail installation is part of Plesk:
+        killall -HUP xinetd
+
+8) That's it!  Watch syslog for any errors (usually /var/log/maillog; Plesk
+   reconfigures syslog to save mail system logs in
+   /usr/local/psa/var/log/maillog).
+
+9) OPTIONAL: Copy the policy.php.example page from the "documentation" directory
+   to a website and change spamdyke's "policy-url" option to give its URL.
+   Be sure to test the contact form to make sure it sends messages correctly.
+
+
+Good luck!  If you have any issues or questions, please send a message to the
+spamdyke-users mailing list (the subscription form is at www.spamdyke.org).
+
+
+The "utils" directory contains additional utilities that spamdyke does not
+require.  If you wish to compile them, change to the "utils" folder, then run
+"configure" and "make":
+     cd spamdyke-x.y.z/utils
+     ./configure
+     make
+Copy the executables to appropriate locations as needed.  None of them need to
+be in any specific directory to work.  None of them require the presence of the
+others.  spamdyke does not need any of them to function.
+
+
+EXAMPLE:
+  My server runs netqmail-1.05+TLS+viruscan and vpopmail, installed using the
+  instructions from lifewithqmail.org.  I put the whitelist, blacklist and
+  graylist files in the /home/vpopmail directory.  This is not required, I just
+  put them there because the qmaild user already owns all the files there.
+  Other good locations for them might be /etc/spamdyke or /var/qmail/spamdyke.
+
+  My entire /service/qmail-smtpd/run file is:
+--------------------------------------------------------------------------------
+#!/bin/sh
+
+QMAILDUID=`id -u qmaild`
+NOFILESGID=`id -g qmaild`
+MAXSMTPD=`cat /var/qmail/control/concurrencyincoming`
+LOCAL=`head -1 /var/qmail/control/me`
+
+if [ -z "$QMAILDUID" -o -z "$NOFILESGID" -o -z "$MAXSMTPD" -o -z "$LOCAL" ]; then
+echo QMAILDUID, NOFILESGID, MAXSMTPD, or LOCAL is unset in
+echo /var/qmail/supervise/qmail-smtpd/run
+exit 1
+fi
+
+if [ ! -f /var/qmail/control/rcpthosts ]; then
+echo "No /var/qmail/control/rcpthosts!"
+echo "Refusing to start SMTP listener because it'll create an open relay"
+exit 1
+fi
+
+exec /usr/local/bin/tcpserver -v -R -l "$LOCAL" -x /etc/tcp.smtp.cdb -c "$MAXSMTPD" -u "$QMAILDUID" -g "$NOFILESGID" 0 smtp \
+        /usr/local/bin/spamdyke -f /etc/spamdyke.conf \
+        /var/qmail/bin/qmail-smtpd /home/vpopmail/bin/vchkpw /bin/true \
+        2>&1
+--------------------------------------------------------------------------------
+
+  My /etc/spamdyke.conf file contains:
+--------------------------------------------------------------------------------
+log-level=info
+max-recipients=5
+idle-timeout-secs=300
+graylist-dir=/home/vpopmail/graylist
+graylist-level=always
+graylist-min-secs=300
+graylist-max-secs=1814400
+policy-url=http://my.policy.explanation.url/
+reject-empty-rdns
+reject-unresolvable-rdns 
+reject-ip-in-cc-rdns
+rdns-whitelist-file=/home/vpopmail/whitelist_rdns
+ip-whitelist-file=/home/vpopmail/whitelist_ip
+greeting-delay-secs=5
+dns-blacklist-entry=b.barracudacentral.org
+dns-blacklist-entry=zen.spamhaus.org
+rhs-blacklist-entry=fresh.spameatingmonkey.com
+reject-sender=no-mx
+reject-recipient=same-as-sender
+tls-certificate-file=/var/qmail/control/servercert.pem 
+config-dir=/etc/spamdyke.d
+config-dir=/etc/spamdyke.d2
+sender-blacklist-file=/home/vpopmail/blacklist_senders
+sender-whitelist-file=/home/vpopmail/whitelist_senders
+recipient-blacklist-file=/home/vpopmail/blacklist_recipients
+recipient-whitelist-file=/home/vpopmail/whitelist_recipients
+ip-in-rdns-keyword-blacklist-file=/home/vpopmail/blacklist_keywords
+ip-blacklist-file=/home/vpopmail/blacklist_ip
+rdns-blacklist-dir=/home/vpopmail/blacklist_rdns.d
+header-blacklist-file=/home/vpopmail/blacklist_headers
+--------------------------------------------------------------------------------

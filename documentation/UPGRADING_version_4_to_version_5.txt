@@ -1,0 +1,122 @@
+================================================================================
+=== UPGRADING FROM VERSION 4.x TO 5.0.0
+================================================================================
+In addition to changing the naming of some options, spamdyke 5.0.0 treats some
+concepts differently than previous versions.  Because of these changes, it is
+not possible to configure spamdyke 5.0.0 to get exactly the same behavior as
+version 4.3.1.
+
+Most significantly, spamdyke 5.0.0 no longer allows whitelisted connections to
+relay.  Whitelisting only allows a connection to bypass spamdyke's filters.
+In version 5.0.0, a connection is allowed to relay if:
+  - The RELAYCLIENT environment variable is set before spamdyke starts.  This
+    is typically done by the tcpserver process when the IP address matches an
+    entry in /etc/tcp.smtp
+  - The client authenticates.  Authenticated connections are always allowed
+    to relay.
+  - The client's IP address matches a value given with the "ip-relay-entry"
+    or "ip-relay-file" options.
+  - The client's rDNS name matches a value given with the "rdns-relay-entry" or
+    "rdns-relay-file" options.
+
+Another change affects the way spamdyke's sender MX filter works.  In version
+5.0.0, spamdyke will give preference to an MX record over an A record.  For
+example, suppose a sender's domain had an A record with a valid IP address and
+an MX record with a name that did not resolve.  Previous versions of spamdyke
+would allow the connection because of the A record.  Version 5.0.0 will ignore
+the A record because the MX record exists.  If the MX record does not resolve,
+the sender MX filter will not allow the connection.  Realistically, this change
+will only affect a very few senders.
+
+The remaining backwards-incompatible changes are existing options with new
+names.  Edit spamdyke's configuration file or command line:
+  If the "reject-missing-sender-mx" option is given, it should be changed to
+  "reject-sender" with a value of "no-mx".
+
+  If the "rejection-text-missing-sender-mx" option is given, it should be
+  renamed to "rejection-text-sender-no-mx".
+
+  If the "reject-identical-sender-recipient" option is given, it should be
+  changed to "reject-recipient" with a value of "same-as-sender".
+
+  If the "rejection-text-identical-sender-recipient" option is given, it should
+  be renamed to "rejection-text-recipient-same-as-sender".
+
+  If the option "local-domains-file" is given, it should be renamed to
+  "qmail-rcpthosts-file".
+
+  If the option "local-domains-entry" is given, it should be removed.  Any
+  domains given with this option should be added to the file given with
+  "qmail-rcpthosts-file".
+
+  If qmail's "morercpthosts" file is provided to spamdyke with the
+  "qmail-rcpthosts-file" option (formerly "lcoal-domains-file"), the CDB file
+  should be provided instead with the "qmail-morercpthosts-cdb" option.
+
+That's it!
+
+
+
+================================================================================
+=== NEW OPTIONS
+================================================================================
+The following options have been added to spamdyke:
+  ip-relay-entry: Gives individual IP addresses that are allowed to relay.
+  ip-relay-file: Gives a filename containing IP addresses that are allowed to
+    relay.
+  rdns-relay-entry: Gives individual rDNS names that are allowed to relay.
+  rdns-relay-file: Gives a filename containing rDNS names that are allowed to
+    relay.
+  more-help: Shows the full list of available options with descriptions.
+  recipient-validation-command: Sets the full path to the spamdyke-qrv binary
+    that is to be used during recipient validation.
+  reject-recipient: Takes multiple values to filter recipients, including the
+    ability to reject invalid recipients!
+  reject-sender: Takes multiple values to filter senders, including the ability
+    to reject senders with different addresses than the username used during
+    authentication.
+  rejection-text-sender-not-local: Allows setting the rejection text sent when
+    the sender address is not hosted on the local server.
+  rejection-text-sender-authentication-mismatch: Allows setting the rejection
+    text sent when the sender address does not match the username given during
+    authentication.
+  rejection-text-recipient-invalid: Allows setting the rejection text sent when
+    the recipient address does not exist.
+  rejection-text-recipient-unavailable: Allows setting the rejection text sent
+    when the recipient address temporarily cannot receive mail (usually due to
+    a file permission problem).
+
+A new program is also included: spamdyke-qrv
+This program should be compiled and installed as a "setuid root" binary if
+recipient validation is needed (see the "reject-recipient" option for details).
+  
+
+
+
+================================================================================
+=== CHANGED OPTIONS
+================================================================================
+The following spamdyke options have changed their behavior/effect:
+  "help" now displays only a list of all the available options.  To see the full
+    listing of all options with descriptions, use "more-help".
+  "qmail-rcpthosts-file" (formerly "local-domains-file") now has the default
+    value "/var/qmail/control/rcpthosts".
+
+The following spamdyke options have only been renamed (behavior/effect remains
+unchanged):
+  local-domains-file became qmail-rcpthosts-file
+  rejection-text-missing-sender-mx became rejection-text-sender-no-mx
+  rejection-text-identical-sender-recipient became
+    rejection-text-recipient-same-as-sender
+
+
+
+================================================================================
+=== REMOVED OPTIONS
+================================================================================
+The following spamdyke options have been removed:
+  access-file
+  local-domains-entry
+  reject-identical-sender-recipient
+  reject-missing-sender-mx
+  rejection-text-access-denied

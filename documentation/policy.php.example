@@ -1,0 +1,441 @@
+<?php
+/**
+ * @filename spam_policy.php
+ * @author Samuel Krieg <samuel.krieg at gmail dot com>
+ * @author Sam Clippinger <samc at silence dot org>
+ * @licence http://opensource.org/licenses/gpl-2.0.php
+ * @version 1.0
+ * @date 08.08.23
+ *
+ * Based on http://iconoclast.silence.org/policy/index.html
+ * with permission of Sam Clippinger.
+ *
+ * This script is willing to be used as the Spam Policy ("policy-url") link in the Spamdyke software.
+ *
+ * Installation:
+ * 1. Define the ADMIN_EMAIL and ORG_NAME values to something nice.
+ * 2. Upload this file where the policy-url is linking to.
+ * 3. Test this script!  Don't just blindly assume it will work!
+ */
+ 
+/****** Constants ******/
+ 
+// Fill up this constant with your email
+// On a default Apache installation, the SERVER_ADMIN variable is usually root@localhost
+define ('ADMIN_EMAIL', $_SERVER['SERVER_ADMIN'] );
+
+// This is your company name or organization name that will be in the page's title
+define ('ORG_NAME', 'My organization');
+
+// Use HTML anchors
+define ('USE_ANCHORS', true);
+
+/****** Functions ******/
+
+/**
+ * Check value of POST parameters
+ * Returns true if good values, false if no
+ */
+function checkParams(){
+
+    /**
+     * Check if string looks like an email
+     * returns true if yes, false if no
+     */
+    function isEmail($email){
+
+    // clean string a little bit
+    $email = rtrim($email);
+
+    // $email must look like an email
+    $a = preg_match('/^[a-z0-9._\-+]+@[a-z0-9.\-]+\.[a-z]{2,5}$/i', $email);
+
+    return $a;
+    
+  }
+
+    // These fields must not be empty
+    $requiredFields = array('name', 'email', 'message');
+    // These fields must fit *one* line
+    $singleLineFields = array('name', 'email');
+
+    // I can't check params if they don't exist!
+    if (!isset($_POST) || !$_POST) return false;
+
+    // required fields must be filled
+    foreach ($requiredFields as $field)
+        if ( !isset($_POST[$field]) || !rtrim($_POST[$field]) ) return false;
+
+    // single line fields must have one line
+    foreach ($singleLineFields as $field)
+    if ( !isset($_POST[$field]) || preg_match('/[\n\r]/', $_POST[$field]) ) return false;
+
+    // special operation for email
+    if ( ($field == 'email') && (!isEmail($_POST['email'])) ) return false;
+
+    // all tests passed! good job!
+    return true;
+}
+
+/**
+ * Reads form's data and do something with it
+ */
+function processForm(){
+
+    if (!checkParams()){
+
+        // A script kiddy
+        ?><p>You are doing something wrong</p><?php
+        endScript();
+
+    }else{
+
+        if (sendMail($_POST['name'], $_POST['email'], ADMIN_EMAIL, $_POST['message'] )){
+
+            ?><p>The mail has been sent. Please be patient and we will answer you.</p><?php
+            endScript();
+
+        }else{
+
+            ?><p>There was a problem sending the mail. The system administrator will come soon to fix it. Come back later.<?php
+            endScript();
+
+        }
+    }
+}
+
+/**
+ * Sends an email
+ * (rly?)
+ */
+function sendMail($fromName, $fromEmail,$to,$msg) {
+
+    $message = buildMsg($fromName, $fromEmail,$msg);  
+    $subject = 'Spam Policy Form message from '.$fromName;
+    // separate headers with "\r\n"
+    $headers = "X-Script: " . $_SERVER['SCRIPT_URI'];
+
+    // Send!
+    $res = mail($to, $subject, $message, $headers);
+    return $res;
+}
+
+/**
+ * Builds a nice message
+ */
+function buildMsg($name, $fromEmail, $message){
+
+    $msg = <<<EOM
+Hi,
+
+The user $name <{$fromEmail}> (with remote address {$_SERVER['REMOTE_ADDR']}) does not want his email to be blocked.
+His message below:
+
+------
+$message
+------
+
+--
+Spam Policy Form
+{$_SERVER['SCRIPT_URI']}
+EOM;
+
+    return $msg;
+}
+
+/**
+ * Ends the script
+ * (This is an ugly way to end a script!)
+ */
+function endScript (){
+    echo "\n</body>\n</html>";
+    exit();
+}
+
+/****** Messages and solutions ******/
+
+/**
+ * Error codes and their scolution.
+ * After wondering what's more boring between wrinting HTML or PHP, I decided to write this array.
+ *
+ * For more error codes, just rtfm: http://www.spamdyke.org/documentation/README.html#LOG
+ */
+$codes = array();
+$codes['DENIED_TOO_MANY_RECIPIENTS']['message'] = 'Too many recipients. Try the remaining addresses again later.';
+$codes['DENIED_TOO_MANY_RECIPIENTS']['solution'][] = 'Our server will only allow incoming messages to be addressed to a small number of recipients, because spammers love to send a single message to thousands of addresses over the same connection. You shouldn\'t have seen this message - your mail server should have silently tried to resend your message to the blocked recipients.';
+$codes['DENIED_TOO_MANY_RECIPIENTS']['solution'][] = '<strong>NOTE:</strong> This filter has <strong>NOTHING</strong> to do with the number of addresses you use on the "To:" line of your message. This filter only blocks commonly exploited email delivery loophole by forcing your server to retry delivery to some recipients if there are a bunch.';
+$codes['DENIED_UNQUALIFIED_RECIPIENT']['message'] = 'Improper recipient address. Try supplying a domain name.';
+$codes['DENIED_UNQUALIFIED_RECIPIENT']['solution'][] = 'For some reason, your mail server isn\'t giving the domain name of the recipient. For example, it\'s trying to deliver to "joe" instead of "joe@example.com". Without the domain name, we can\'t get the email to the correct person. Spammers try this a lot, assuming that our server will find someone named "joe" and deliver the spam to him. We don\'t do that.';
+$codes['DENIED_GRAYLISTED']['message'] = 'Your address has been graylisted. Try again later.';
+$codes['DENIED_GRAYLISTED']['solution'][] = 'Our server will only allow incoming messages from people who have sent messages in the past. If you\'ve never sent a message to our user before, our server will ask yours to try again later, just to make sure it\'s a real mail server. This process should be completely automatic, so a regular email user should never see this message. Spammers don\'t retry later, so this blocks a lot of spam.';
+$codes['DENIED_RDNS_MISSING']['message'] = 'Refused. You have no reverse DNS entry.';
+$codes['DENIED_RDNS_MISSING']['solution'][] = 'Every server on the internet should have a reverse DNS entry, especially mail servers. If you don\'t know what this means, you shouldn\'t be running a mail server. Seriously, if you don\'t know this, what else should you know?';
+$codes['DENIED_RDNS_MISSING']['solution'][] = 'Our mail server checks for reverse DNS entries. Any email coming from a server without one is blocked. This stops a lot of email from servers that shouldn\'t be sending email, such as virus-infected home computers on cable modems.';
+$codes['DENIED_RDNS_RESOLVE']['message'] = 'Refused. Your reverse DNS entry does not resolve.';
+$codes['DENIED_RDNS_RESOLVE']['solution'][] = 'Your server has a reverse DNS entry but it doesn\'t resolve. In other words, it\'s claiming to be someone it\'s not. Our server is going to block your email until your server correctly identifies itself.';
+$codes['DENIED_RDNS_RESOLVE']['solution'][] = 'To look up your mail server\'s reverse DNS, use AOL\'s rDNS tool: <a href="http://www.postmaster.aol.com/tools/rdns.html">www.postmaster.aol.com/tools/rdns.html</a>';
+$codes['DENIED_IP_IN_CC_RDNS']['message'] = 'Refused. Your reverse DNS entry contains your IP address and a country code.';
+$codes['DENIED_IP_IN_CC_RDNS']['solution'][] = 'Your server\'s reverse DNS entry contains its IP address and ends in a two-character country code. For example, if your IP address is 11.22.33.44 and your reverse DNS entry is 11.22.33.44.example.com.us, our server is going to block your email. IP addresses in reverse DNS entries usually indicate servers that shouldn\'t be sending email - just the kind of server a spammer would use. Country codes are checked because we don\'t know how to say "dynamic" in every language on earth.';
+$codes['DENIED_IP_IN_CC_RDNS']['solution'][] = 'Just change your reverse DNS entry to something meaningful.';
+$codes['DENIED_IP_IN_CC_RDNS']['solution'][] = 'To look up your mail server\'s reverse DNS, use AOL\'s rDNS tool: <a href="http://www.postmaster.aol.com/tools/rdns.html">www.postmaster.aol.com/tools/rdns.html</a>';
+$codes['DENIED_IP_IN_RDNS']['message'] = 'Refused. Your reverse DNS entry contains your IP address and a banned keyword.';
+$codes['DENIED_IP_IN_RDNS']['solution'][] = 'Your server\'s reverse DNS entry contains its IP address and a keyword that indicates its IP address was assigned dynamically. For example, if your IP address is 11.22.33.44 and your reverse DNS entry is 11.22.33.44.dynamic.example.com, our server is going to block your email. IP addresses in reverse DNS entries usually indicate servers that shouldn\'t be sending email - just the kind of server a spammer would use.';
+$codes['DENIED_IP_IN_RDNS']['solution'][] = 'Just change your reverse DNS entry to something meaningful.';
+$codes['DENIED_IP_IN_RDNS']['solution'][] = 'To look up your mail server\'s reverse DNS, use AOL\'s rDNS tool: <a href="http://www.postmaster.aol.com/tools/rdns.html">www.postmaster.aol.com/tools/rdns.html</a>';
+$codes['DENIED_EARLYTALKER']['message'] = 'Refused. You are not following the SMTP protocol.';
+$codes['DENIED_EARLYTALKER']['solution'][] = 'Your server is not following the SMTP protocol. As soon as it behaves, our server will accept your email.';
+$codes['DENIED_BLACKLIST_NAME']['message'] = 'Refused. Your domain name is blacklisted.';
+$codes['DENIED_BLACKLIST_NAME']['solution'][] = 'You (or someone else) have sent us so much spam that we\'ve added your domain name to our blacklist. Sorry about that, but we\'ve had enough and we don\'t know what else to do.';
+$codes['DENIED_BLACKLIST_IP']['message'] = 'Refused. Your IP address is blacklisted.';
+$codes['DENIED_BLACKLIST_IP']['solution'][] = 'Your server has sent us so much spam that we\'ve blacklisted your IP address. This block may be temporary, possibly only a few days, to give you time to think about what you\'ve done and repent your evil ways. If you persist, we\'ll block your IP address permanently.';
+$codes['TIMEOUT']['message'] = 'Timeout. Talk faster next time.';
+$codes['TIMEOUT']['solution'][] = 'Our server can only wait so long for your server to send information. If your connection (or your server) is too slow, our server will hang up after a while. Lots of spam software seems to connect and just wait forever, so we have to give up at some point or we\'ll end up connected to everyone.';
+$codes['DENIED_SENDER_BLACKLISTED']['message'] = 'Refused. Your sender address has been blacklisted.';
+$codes['DENIED_SENDER_BLACKLISTED']['solution'][] = 'You (or someone else) have sent us so much spam from the same email address that we\'ve blacklisted your email address specifically, no matter where the email comes from.';
+$codes['DENIED_RECIPIENT_BLACKLISTED']['message'] = 'Refused. Mail is not being accepted at this address.';
+$codes['DENIED_RECIPIENT_BLACKLISTED']['solution'][] = 'Some of the addresses on our server get so much spam that we\'ve just closed them down. The address you\'re sending to is one of those. Stop sending email to it, please.';
+$codes['DENIED_SENDER_NO_MX']['message'] = 'Refused. The domain of your sender address has no mail exchanger (MX).';
+$codes['DENIED_SENDER_NO_MX']['solution'][] = 'Your domain\'s MX record either doesn\'t exist or lists a name that doesn\'t resolve AND your domain name doesn\'t have an A record. This means no mail to your domain can possibly be delivered, including bounce messages. In other words, until you start accepting our mail, we won\'t accept yours.';
+$codes['DENIED_RBL_MATCH']['message'] = 'Refused. Your IP address is listed in the RBL at "name"';
+$codes['DENIED_RBL_MATCH']['solution'][] = 'We are using the Real Time Blacklist mentioned above. You have to contact them in order to be delisted.';
+$codes['DENIED_RBL_MATCH']['solution'][] = 'To check where your IP address is listed, there are lots of free sites that will check many public blacklists. You can start with these: <a href="http://www.blacklistalert.org/">www.blacklistalert.org</a>, <a href="http://mxtoolbox.com/blacklists.aspx">mxtoolbox.com/blacklists.aspx/</a>, <a href="http://zy0.de/">zy0.de</a>';
+$codes['DENIED_RHSBL_MATCH']['message'] = 'Refused. Your domain name is listed in the RHSBL at "name"';
+$codes['DENIED_RHSBL_MATCH']['solution'][] = 'We are using the Right-Hand-Side Blacklist mentionned above. You have to contact them in order to be delisted.';
+$codes['DENIED_RELAYING']['message'] = 'Refused. Sending to remote addresses (relaying) is not allowed.';
+$codes['DENIED_RELAYING']['solution'][] = 'You are attempting to use our server to send email to a remote address through our server, which is not allowed. We only accept mail that is to our own users. If you are one of our users, check to make sure your mail client\'s "outgoing server" is set to use "authentication".';
+$codes['DENIED_ZERO_RECIPIENTS']['message'] = 'Refused. You must specify at least one valid recipient.';
+$codes['DENIED_ZERO_RECIPIENTS']['solution'][] = 'You are attempting to deliver a message without providing any recipients. This doesn\'t make any sense.';
+$codes['DENIED_AUTH_REQUIRED']['message'] = 'Refused. Authentication is required to send mail.';
+$codes['DENIED_AUTH_REQUIRED']['solution'][] = 'We do not accept any email unless the sender authenticates first. Reconfigure your mail client\'s "outgoing server" to use "authentication" and try again.';
+$codes['DENIED_REJECT_ALL']['message'] = 'Refused. Mail is not being accepted.';
+$codes['DENIED_REJECT_ALL']['solution'][] = 'Our server is not accepting any email at all right now. There is nothing wrong at your end, you\'re just going to have to wait until we decide to enable email again.';
+$codes['DENIED_IDENTICAL_SENDER_RECIPIENT']['message'] = 'Refused. Identical sender and recipient addresses are not allowed.';
+$codes['DENIED_IDENTICAL_SENDER_RECIPIENT']['solution'][] = 'You are attempting to send email both "to" and "from" the same address, which we don\'t accept any more because too many spammers have tried it to get around our spam filter. If you are one of our users trying to send yourself a message, you should reconfigure your mail client\'s "outgoing server" to use "authentication" and try again.';
+$codes['DENIED_HEADER_BLACKLISTED']['message'] = 'Refused. Your message has been blocked due to its content.';
+$codes['DENIED_HEADER_BLACKLISTED']['solution'][] = 'Your message contains content that we don\'t accept. Most likely (but not always), the problem is your subject line. Try rewording the subject of your message.';
+$codes['DENIED_INVALID_RECIPIENT']['message'] = 'Refused. The recipient address does not exist.';
+$codes['DENIED_INVALID_RECIPIENT']['solution'][] = 'The email address you\'re sending to doesn\'t exist, it\'s really that simple. Maybe it existed once, but not any more. Resending your message won\'t help, there\'s just nowhere for the message to go.';
+$codes['DENIED_UNAVAILABLE_RECIPIENT']['message'] = 'Refused. The recipient is not accepting mail right now.';
+$codes['DENIED_UNAVAILABLE_RECIPIENT']['solution'][] = 'The email address you\'re sending to isn\'t accepting email right now. You should try sending your message again later.';
+$codes['DENIED_SENDER_NOT_LOCAL']['message'] = 'Refused. Mail for your sender domain is not hosted here.';
+$codes['DENIED_SENDER_NOT_LOCAL']['solution'][] = 'You are attempting to send email "from" an address that isn\'t hosted on our server, which we don\'t allow.';
+$codes['DENIED_SENDER_NOT_LOCAL']['solution'][] = 'Reconfigure your mail client\'s "outgoing server" to use "authentication" and try again.';
+$codes['DENIED_SENDER_NOT_AUTH']['message'] = 'Refused. Your sender address does not match your authentication username.';
+$codes['DENIED_SENDER_NOT_AUTH']['solution'][] = 'You are trying to send email "from" a different address than the one your mail client uses to authenticate with our server.  We don\'t allow that any more, because too many spammers have started using stolen credentials to push out their spam.';
+
+/****** HTML content ******/
+
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title><?php echo ORG_NAME ?> - Mail Policies</title>
+<style type="text/css">
+<!--
+body {
+    margin-left: 10%;
+    margin-right: 10%;
+    font: 12px Arial;
+    color: black;
+    background-color: white;
+}
+.header {
+    font-size: 18px;
+    font-weight: bold;
+}
+h2 {
+    font-style:italic;
+}
+
+h3 {
+    font-size: 14px;
+    font-family:"Courier New", Courier, monospace;
+    display: block;
+    font-weight: none;
+    background-color: #CCCCCC;
+}
+
+form {
+    position: relative;
+    width: 80%;
+    margin: inherit;
+    margin-top: 2em;
+    text-align: left;
+}
+
+fieldset {
+    margin-bottom: 1em;
+    border: 0;
+    
+    width: auto;
+    margin: 0.5em;
+    background-color: #CCCCCC;
+    
+    padding: 0.5em;
+}
+
+label.text {
+    display: block;
+    float: left;
+    width: 40%;
+    text-align: right; 
+    margin: 0 1em 0 0;
+    padding: 0.1em;
+    border-bottom: 1px solid white;
+}
+
+input.text, textarea {
+    width: 55%;
+    border: 0;
+}
+textarea {
+    height: 10em;
+}
+
+input.button {
+    padding: 0em 2em;
+}
+
+
+-->
+</style>
+<script language="javascript" type="text/javascript" >
+<!--
+
+// Will contain the fields to check
+var elements = [];
+
+function isEmail(val){
+    return (val.match(/^[a-z0-9._\-+]+@[a-z0-9.\-]+\.[a-z]{2,5}$/i));
+}
+/* Adds an element onto the pile */
+function validate_addelement(field, dataType, phrase){
+
+    // Create an element
+    var el = [field, dataType, phrase];
+
+    //push it on pile
+    elements.push(el);
+
+}
+
+/* Checks an element */
+function validate_checkElement (fieldValue, dataType)
+{
+
+    switch (dataType){
+        case 'text':
+            return (fieldValue != "");
+        case 'email':
+            return (isEmail(fieldValue));
+    }
+
+    // don't know what to do with it
+    return true;
+
+}
+
+/*
+ * Check all fields in the "fields" array
+ * Returns true if everything is ok
+ * or false if user did not filled fields properly
+ */
+function validate_checkall(){
+
+    var len = elements.length;
+
+    // Checks all elements, returns false if there's a problem
+    for (var i = 0; i < len; i++)
+    {
+      if ( !validate_checkElement(elements[i][0].value, elements[i][1]) ) {
+        alert (elements[i][2]);
+        return false;
+      }
+    }
+
+  // No problemo! Go ahead!
+  return true;
+  
+}
+//-->
+
+</script>
+</head>
+
+<body>
+<?php
+
+/**
+ * Process the form if it has been submited
+ * Quits if necessary
+ */
+if ( isset($_POST) && $_POST ) processForm();
+
+?>
+
+<h1>Your email bounced with a message leading you here. Why?</h1>
+
+<p>We hate spam. We really do. (Doesn't everyone?) To try to keep spam levels down, we've
+implemented a bunch of filters to block as much as we can. Unfortunately, nobody's perfect
+and we occassionally block email from our friends too. This page lists all of the messages
+our server sends when it blocks email so you can read about what the filter is and why you
+were blocked.</p>
+
+<p>If you're a friend and your email has been blocked, we're sorry. We really are. It wasn't personal. Please
+use the form at the bottom of this page to let us know about it. We'll fix our filters so
+you never get blocked again.</p>
+
+<p>If you're a spammer, we're not sorry at all. It was very personal. Go to hell.</p>
+<h2>Error messages you might have crossed</h2>
+<?php
+
+foreach ($codes as $key => $strings){
+
+    echo '<h3>';
+    if (USE_ANCHORS) echo '<a name="'.$key.'">';
+    echo $strings['message'];
+    if (USE_ANCHORS) echo '</a>';
+    echo "</h3>\n";
+    
+    foreach ($strings['solution'] as $sol){
+        echo "<p>$sol</p>\n";
+    }
+
+}
+?>
+
+<h2>Contact form</h2>
+<p>
+If you want to contact us because you think your email is legitimate, feel free to use the contact form below.
+</p>
+
+
+<form name="contact" action="<?php echo $_SERVER['SCRIPT_URL'] ?>" method="post">
+
+    <fieldset>
+
+        <p>
+        <label class="text" for="name">Your name (required)</label>
+        <input id="name" type="text" class="text" name="name"  maxlength="300" />
+        </p>
+
+        <p>
+        <label class="text" for="email">Your email address (required)</label>
+        <input id="email" type="text" class="text" name="email" maxlength="300" />
+        </p>
+
+        <p>
+        <label class="text" for="message">Your explanation of why you're being unfairly blocked (required)</label>
+        <textarea id="message" name="message" rows="" cols="" class="text" >Please stop blocking my mail!</textarea>
+        </p>
+
+    </fieldset>
+
+    <p>
+    <label class="text">&nbsp;</label><input type="submit" class="button" name="submitbutton" value="Send" />
+    </p>
+    
+</form>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+/*
+  spamdyke -- a filter for stopping spam at connection time.
+  Copyright (C) 2015 Sam Clippinger (samc (at) silence (dot) org)
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License version 2 as
+  published by the Free Software Foundation.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#undef PACKAGE_NAME
+#undef PACKAGE_VERSION
+#undef PACKAGE_BUGREPORT
+
+#undef HAVE_LIBSSL
+
+#undef int16_t
+#undef int32_t
+#undef int64_t
+#undef uint16_t
+#undef uint32_t
+#undef uint64_t
+
+#undef __func__
+#undef socklen_t
+
+#undef INADDR_LOOPBACK
+
+#undef HAVE_STRUCT_DIRENT_D_TYPE
+#undef HAVE_WHITEOUT
+#undef HAVE_GETOPT_H
+#undef HAVE_STDINT_H
+#undef HAVE_RLIMIT_AS
+
+#undef TIME_WITH_SYS_TIME
+#undef HAVE_SYS_TIME_H
+#undef HAVE_SYS_INTTYPES_H
+#undef HAVE_SYS_TYPES_H
+
+#undef FORMAT_PID_T
+#undef FORMAT_UID_T
+#undef FORMAT_GID_T
+#undef FORMAT_TIME_T
+#undef FORMAT_INT64_T
+#undef FORMAT_UINT64_T
+
+#undef WITH_EXCESSIVE_OUTPUT
+#undef WITH_ADDRESS_SANITIZER
+
+#undef WITHOUT_DEBUG_OUTPUT
+#undef WITHOUT_CONFIG_TEST
+
+#endif /* CONFIG_H */

@@ -1,0 +1,96 @@
+<!--#set var="SELECTED_DOCUMENTATION" VALUE="selected"-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<title>spamdyke: rDNS Directory Structure</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<link rel="stylesheet" type="text/css" href="http://www.spamdyke.org/style/style.css" />
+<link rel="icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="http://www.spamdyke.org/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+<div id="main">
+<div id="links_container">
+<div id="logo"><h1>spamdyke</h1><h2>A drop-in connection-time spam filter for qmail</h2></div>
+<div id="links">
+</div>
+</div>
+<div id="menu">
+<ul>
+<li><a href="http://www.spamdyke.org/">Home</a></li>
+<li><a href="http://www.spamdyke.org/download.html">Download</a></li>
+<li><a id="selected" href="#">Documentation</a></li>
+<li><a href="FAQ.html">FAQ</a></li>
+<li><a href="http://www.spamdyke.org/support.html">Support</a></li>
+<li><a href="http://www.spamdyke.org/mailinglists.html">Mailing Lists</a></li>
+<li><a href="http://www.spamdyke.org/links.html">Links</a></li>
+</ul>
+</div>
+<div id="content">
+<!--#include virtual="../includes/rightnav.html"-->
+<div id="column2">
+
+<h2>rDNS directories</h2>
+<p>
+Some of the options described below search directory structures for rDNS names.
+A directory structure is used because repeatedly searching a file full of domain
+names incurs a serious performance penalty.  Querying the filesystem for the
+existance of a single file is very fast.  Rule of thumb: if there are more than
+100-200 entries in a file, consider switching to a directory structure instead.
+</p><p>
+To construct the directory path it uses, spamdyke takes the remote server's rDNS
+name, breaks it apart at the dots and reverses it using the following patterns:
+<dl>
+<dd><code>e-five.d-four.c-three.b-two.a-one</code> becomes <code>a-one/b/b-two/c-three/e-five.d-four.c-three.b-two.a-one</code>
+<dd><code>d-four.c-three.b-two.a-one</code> becomes <code>a-one/b/b-two/c-three/d-four.c-three.b-two.a-one</code>
+<dd><code>c-three.b-two.a-one</code> becomes <code>a-one/b/b-two/c-three.b-two.a-one</code>
+<dd><code>b-two.a-one</code> becomes <code>a-one/b/b-two/b-two.a-one</code>
+<dd><code>a-one</code> becomes <code>a-one/a/a-one</code>
+</dl>
+In essence, the last three sections of the name are reversed and become
+directory names.  If there are more than three sections, no further directories
+are created.  Also, the first letter of the next-to-last section is used as
+a directory name.  This is done to keep the numbers of directories per folder
+lower, since the "com" folder has the potential to become unmanagable.  The
+full rDNS name is always used as the filename.
+</p><p>
+The final filename is treated as a wildcard and matches any host that ends with
+the given name.  For example, if the following file existed in the directory structure:
+<dl>
+<dd><code>com/e/example/example.com</code>
+</dl>
+spamdyke would match the following rDNS names:
+<dl>
+<dd><code>example.com</code>
+<dd><code>mail.example.com</code>
+<dd><code>internal.mail.example.com</code>
+<dd><code>2ndfloor.internal.mail.example.com</code>
+</dl>
+</p><p>
+These directory and filenames can be constructed with the domain2path tool,
+included with spamdyke.  domain2path takes one rDNS name as an argument and
+returns the correct path to that name.  domain2path also accepts a flag, <code>-d</code>,
+which makes it only return the directories in the path.  This is useful in
+scripts:
+<dl>
+<dd><code>mkdir -p /PATH/TO/DIR/`domain2path -d FQDN`</code>
+<dd><code>touch /PATH/TO/DIR/`domain2path FQDN`</code>
+</dl>
+</p><p>
+NOTE: The names of all the directories and files used in the directory structure
+must be lowercase or spamdyke will not match them.  Unfortunately, searching a
+case sensitive filesystem in a case insensitive manner is not practical.
+</p>
+
+</div>
+</div>
+<div id="footer">
+copyright &copy;2015 Sam Clippinger |
+<a href="mailto:samc%40silence%2Eorg">samc (at) silence (dot) org</a> |
+<a href="http://www.dcarter.co.uk">design by dcarter</a>
+</div>
+</div>
+</body>
+</html>

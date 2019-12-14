@@ -1,0 +1,1824 @@
+VERSION 5.0.1 - 5/1/2015
+  Fixed a typo in the README file for the OpenSSL "dhparam" command.  Thanks to
+    Eric Shubert for reporting this one.
+  Removed unused variables from the dns* commands in the utils folder to fix
+    compiler warnings.
+  Fixed a bug in read_file() that returned uninitialized pointers if a file
+    contained blank lines or comments at the top, causing segfaults when they
+    were free()d.  Thanks to Jeffrey Gordon and Quinn Comendant for reporting
+    this one.
+  Changed the directory naming scheme in the "generator" program to include the
+    flowchart step numbers in the name.  The old pattern was just too hard to
+    follow visually and far too difficult to search for a specific test.
+  Added more steps to the recipient validation flowchart and spamdyke-qrv's
+    recipient validation filter to correctly handle addresses that are forwarded
+    to an external address.  Thanks to Stephen Marley for reporting this one.
+  Changed search_file() in spamdyke-qrv to return a "not found" result when the
+    file does not exist, instead of an error.
+  Added a delay loop to exec_command_argv() in spamdyke and spamdyke-qrv to work
+    around a race condition -- sometimes the child process will close its pipes
+    in preparation for exiting and the parent's waitpid() will fire before the
+    child has fully exited. This leads to erroneous returns showing the child
+    has not exited when it really only needed another timeslice or two.  This is
+    fixed by looping with nanosleep() to wait a few tenths of a second after
+    seeing this return code.
+  Added a way to stop a test script run by creating a file named "stop".  This
+    allows it to be stopped without killing the process and potentially leaving
+    the test platform in a partially (mis)configured state.
+  Fixed the accessor function for the header-blacklist-entry and
+    header-blacklist-file options to find their data in the filter_settings
+    object instead of the option_set object.  This is because the data is moved
+    from the option_set immediately after it is set so the blacklist effect is
+    cumulative when set from configuration directories.  Reading from the wrong
+    location meant the config-test feature was never testing those options at
+    all.  Thanks to Stefan for reporting this one.
+  Fixed a pair of bugs in process_config_file(): one that would add empty values
+    to the end of a list of blacklist/whitelist files if a directive was
+    followed by a blank line and a commented-out directive (causing errors when
+    the values are used), the other that would throw errors if a line in a
+    configuration file contained only one space.  Thanks to Les Fenison for
+    reporting these.
+  Fixed a bug in middleman() that would return an improper greeting when
+    injecting both AUTH and STARTTLS banners into the EHLO response.  Clients
+    seeing this improper greeting would hang forever and eventually timeout.
+    Thanks to Elliot Denk for reporting this one and sending a patch!
+  Fixed a major thinko in smtp_filter that was carrying over the rejection data
+    between recipients, even if a recipient had a configuration directory file
+    that altered the overall configuration.  This was leading to some
+    recipients being incorrectly rejected under very specific (and likely very
+    rare) conditions, which just happened to be met on my own server.
+  Fixed a bug in copy_base_options that was not copying the "reason" data from
+    the last rejection.
+  Fixed an infinite loop in dnsdummy when priorities over 0 are used.
+  Fixed a typo in dnsdummy that was truncating data when the verbose flags were
+    used (weird, yes).
+  Changed dnsdummy to fork a child process to return each query.  This was the
+    easiest solution to implement to allow new queries to be processed while
+    waiting n seconds to send answers to previous queries.  This is a fragile
+    and wasteful solution -- if dnsdummy were intended for production use, a
+    queue would be a much better solution.
+  Changed all of the "verbose"-level error messages to include the name of the
+    function, file and line that generated it.  Every other message prefixed
+    with "ERROR" already did this, so this makes things more consistent.
+  Renamed all of the "FILTER" messages and added a new logging macro to print
+    them named SPAMDYKE_LOG_FILTER().  This way they can continue to be output
+    without function, file and line information.
+  Renamed the SPAMDYKE_LOG_CONFIG_TEST() macro to
+    SPAMDYKE_LOG_CONFIG_TEST_ERROR() and changed it to use LOG_LEVEL_ERROR
+    instead of having a special LOG_LEVEL_CONFIG_TEST setting.  This way the
+    config-test messages can be changed to emit file, function and lines if
+    needed (or not).
+  Added SPAMDYKE_LOG_CONFIG_TEST_INFO() and SPAMDYKE_LOG_CONFIG_TEST_VERBOSE()
+    as analogs to SPAMDYKE_LOG_CONFIG_TEST_ERROR().
+  Changed dnsdummy to encode multiple answers in the same response, if its
+    config file contains multiple matches for the same query.
+  Fixed a bug in dnsdummy that was adding extra bytes to the end of each
+    answer.  This turned out to be covering a matching (compensating) bug in
+    spamdyke's DNS parsing code.  I really hate it when that happens!
+  Fixed a serious bug in nihdns_expand() that was causing spamdyke to
+    incorrectly parse DNS responses with multiple answers; it would use the
+    first answer, then skip the wrong number of bytes, causing it to conclude
+    any subsequent answers were corrupted.
+  Changed nihdns_expand() to return separate values for the number of bytes in
+    the decoded string and the number of bytes the string occupies in the DNS
+    packet.  Due to packet compression, the numbers can be very different.
+  Changed generator to add records to the named configuration so domains will
+    resolve correctly during testing.  Since using port numbers in resolv.conf
+    is not allowed, there is no easy way to use dnsdummy for these tests.
+  Discovered qmail-send does not check the percenthack or virtualdomains files
+    when resolving forward addresses, only locals and assign.  Updated
+    spamdyke-qrv to behave the same way.
+  Refined the success/failure detection in generator after learning more about
+    qmail's behavior.  If only it had some kind of accurate documentation...
+  Extended the tests created by generator to also test conditions where
+    spamdyke-qrv calls vpopmail to look up addresses.  This increased the
+    number of spamdyke-qrv tests more than tenfold!
+  Added a "diagnostic output" flag to spamdyke-qrv to print the decision path
+    it used to evaluate the address.  Also added a test to the test generator
+    to compare the diagnostic output with the expected decision path, to
+    catch tests that may be producing the desired effect for the wrong reason.
+  Fixed a bug in set_config_value() to make it possible to set
+    CONFIG_TYPE_NAME_MULTIPLE options to "none" or unset specific values.
+    Thanks to Konstantin for reporting this one.
+  Added flags to smtpdummy to advertise STARTTLS support in response to EHLO.
+    It doesn't actually do TLS, it just advertises it.
+  Fixed smtp_filter() to block a client's STARTTLS command if tls-level is
+    "none".  Thanks to Les Fenison for reporting this one.
+  Added a flag to the configure script for both spamdyke and spamdyke-qrv to
+    compile with the address sanitizer library to catch memory access errors.
+    Adjusted the version string to show when the sanitizer is in use.
+  Changed the test scripts to always compile spamdyke with the address
+    sanitizer (if available) when testing.  The tests run a lot slower, but
+    the sanitizer is too awesome to not use.
+  Fixed a buffer underrun in examine_entry that was causing segfaults when
+    searching files where wildcards are allowed at the beginning of the lines.
+    Thanks to Dirk Kannapinn for reporting this one.
+  Discovered a horrible problem with snprintf()'s %n format -- it returns the
+    number of bytes it _would_have_ written *if* there were infinite space, not
+    the number of bytes *actually* written as the man page states.  So using %n
+    at the end of the format string as a substitute for immediately calling
+    strlen() is not safe.  Good thing I don't ever do that, right? ...wait,
+    I use that feature EVERYWHERE! (grrrrr)  Thanks to the Google Address
+    Sanitizer team for finding this one.  Whoever implemented the %n feature
+    in glibc can report to me any time for a free punch in the throat.
+    I want my weekend back.
+  Reverted the (apparently) useless change from 4.3.0 to use %n in snprintf()
+    instead of the return value and replaced snprintf() with a macro named
+    SNPRINTF() that explicitly compares the return value with the size of the
+    buffer and returns the number of bytes ACTUALLY written.
+  Fixed a harmless buffer overrun in sub_examine_tcprules_entry() that could
+    have overwritten one byte of another variable on the stack with a null
+    byte.  Since the address was valid and that other variable is set just
+    after the overwrite anyway, it wasn't actually a problem.  But fixing it
+    makes the address sanitizer happy, so it's fixed.
+  Fixed a pair of huge buffer overruns in config_test_file_read() and
+    config_test_file_read_write() that could load 63K of file contents past
+    the end of the buffer (on the stack).  Fortunately, these functions are
+    only used by the config-test feature, never during normal operation.
+  Fixed a buffer overflow in find_address() that would overwrite a single byte
+    in the caller's stack with a null byte when parsing BATV addresses.  From
+    what I can tell, the effect of this bug would be to either truncate the
+    parsed address or cause a segfault.
+  Added undo_softlimit() to try to increase the "soft" limits on address space,
+    stack size and memory size to maximum if they are less than infinite (and
+    squawk if they cannot be reset to maximum).  This will (hopefully) prevent
+    problems caused by DJB's "softlimit" program, which is a useless piece of
+    trash many qmail install guides *still* recommend using.
+  Fixed a bug in the logging code of tls_read() that was using an "error"
+    message to log at "verbose" level.  The error message had more printf()
+    format specifiers than the verbose logger was providing, which was leading
+    to segfaults when the message was printed.  Many thanks to Konstanin for
+    a lot of help tracking this one down.
+
+VERSION 5.0.0 - 1/28/2014
+  Rearranged the test scripts to put them in folders by category.  This just
+    makes the directory listing a little more manageable.
+  Corrected some typos in the README file.  Thanks to John Mendoza for reporting
+    those.
+  Fixed a very obscure bug in spamdyke_log(): on Linux systems (possibly only
+    64-bit systems), vsyslog() occasionally will not print all the variable
+    arguments.  One way was found to trigger this behavior -- when the
+    rdns-blacklist-dir filter is activated from a configuration directory.
+  Fixed a bug in find_domain() that could cause segfaults when parsing certain
+    invalid formats.  Thanks to Gary Gendel for reporting this one.
+  Added a backup/restore feature to the "run" script in the "tests" folder to
+    save a copy of the most critical system and qmail files before running any
+    scripts.  This is needed because some of the scripts alter those files and,
+    if they don't run correctly or are cancelled, the originals are lost.
+  Added a "-skipcompile" flag to the "run" script in the "tests" folder to skip
+    reconfiguring and recompiling all of the binaries when the script is run.
+  Changed the "run" script in the "tests" folder to empty qmail's queue before
+    and after the tests are run.
+  Changed the "run" script in the "tests" folder to compare the current system
+    and qmail configuration files to the latest backup after every script
+    finishes.  If they don't match, the latest backup is restored.  If they
+    still don't match, the script stops with an error.
+  Changed nihdns_query() to accept an optional "preferred" type of response.  If
+    multiple types are queried, it will wait for at least one timeout period for
+    an answer of that type to arrive instead of always accepting the first
+    answer to arrive.  It will accept a saved answer before resending the
+    queries, however.
+  NOT BACKWARDS COMPATIBLE: Changed nihdns_mx() to prefer an MX record over an A
+    record, if both exist.  Given the choice, the MX record will be checked for
+    validity and the A record will be ignored.  Thanks to Bruce Schreiber for
+    suggesting this one.
+  Fixed filter_level() and smtp_filter() to disregard whitelisting and require
+    authentication if the "filter-level" option is set to "require-auth", as the
+    documentation says it should.  Thanks to Arne for reporting this one.
+  Changed nihdns_create_packet() to strip trailing dots from names before using
+    them in DNS queries.  A trailing dot is the traditional way to tell libc's
+    resolver not to append the local domain name and many sysadmins expect to
+    have to use it.  Since spamdyke never appends the local domain and doesn't
+    use libc's resolver, it isn't necessary and causes lookups to fail.  Thanks
+    to Dossy Shiobara for reporting this one.
+  Changed middleman() to always send a "STARTTLS" response to "EHLO" as a
+    continuation, never as the last line (only when spamdyke is inserting
+    "STARTTLS").  This works around a bug in the Android mail client, which only
+    looks for "STARTTLS" as a continuation.  Thanks to Jonas Pasche for writing
+    about how to work around this bug on his blog.
+  NOT BACKWARDS COMPATIBLE: Changed the meaning of "whitelisted" to only exempt
+    the connection from spamdyke's spam filters; whitelisting no longer allows
+    the connection to relay mail.  This means spamdyke will now only set the
+    RELAYCLIENT environment variable if the "relay-level" option is set to
+    "allow-all".  Relaying must now be controlled through tcpserver or xinetd.
+    Many thanks to Eric Shubert for suggesting and debating this with me.
+  NOT BACKWARDS COMPATIBLE: Removed the "access-file" and
+    "rejection-text-access-denied" options because they were only needed for
+    controlling relaying.  Also removed the test scripts that exercised them and
+    modified many other test scripts that used them.
+  NOT BACKWARDS COMPATIBLE: Removed the "no-check" value from the "relay-level"
+    option and changed the meaning of the "normal" value to use the logic
+    previously assigned to "no-check".
+  Added the option "reject-sender" to take multiple values.  If the value
+    "not-local" is given, the sender will be rejected if the domain name is not
+    hosted locally.  If the value "authentication-mismatch" is given, the sender
+    will be rejected if the sender address does not exactly match the username
+    given during authentication (or if the authentication username is not an
+    email address, the sender username must match the authentication username).
+    If the value "authentication-domain-mismatch" is given, the sender will be
+    rejected if the domain name is not part of the username given during
+    authentication.  Thanks to Mark Frater for suggesting this one.
+  Added the options "rejection-text-sender-not-local" and
+    "rejection-text-sender-authentication-mismatch" to set the rejection text
+    given when the "reject-sender" option's filters are triggered.
+  NOT BACKWARDS COMPATIBLE: Removed the option "reject-missing-sender-mx" and
+    folded its filter into the "reject-sender" filter's "no-mx" option.
+  NOT BACKWARDS COMPATIBLE: Renamed the option
+    "rejection-text-missing-sender-mx" to "rejection-text-sender-no-mx".
+  NOT BACKWARDS COMPATIBLE: Renamed the option
+    "reject-identical-sender-recipient" to "reject-recipient" with the value
+    "same-as-sender".  The functionality remains the same.
+  NOT BACKWARDS COMPATIBLE: Renamed the option
+    "rejection-text-identical-sender-recipient" to
+    "rejection-text-recipient-same-as-sender".
+  NOT BACKWARDS COMPATIBLE: Renamed the option "local-domains-file" to
+    "qmail-rcpthosts-file".  The naming has always been confusing, since qmail
+    distinguishes between domains that should be accepted by qmail-smtpd during
+    SMTP (rcpthosts) and domains that are actually hosted locally with mailboxes
+    on the local filesystem (locals).  These options have always meant the
+    former, but now that spamdyke needs to know both lists of domains, it's time
+    to rename them.  This option is also now allowed in configuration
+    directories.
+  NOT BACKWARDS COMPATIBLE: Removed the option "local-domains-entry" because
+    supplying domains that can be accepted during SMTP to spamdyke only (but
+    not qmail) will cause inconsistent results during recipient validation.
+    If a domain is to be accepted during SMTP, it should be added to the control
+    files used by both spamdyke and qmail.
+  Added CDB searching code in cdb.[ch] to read DJB's "constant database" files
+    during recipient validation.  The format of these files is claimed (by DJB)
+    to be fast and efficient.  Don't believe the hype...
+  Added the option "qmail-morercpthosts-cdb" to allow CDB files to be provided
+    that contain lists of domains for which mail should be accepted during SMTP.
+    Does anyone actually use this qmail "feature"?
+  Poured over qmail's documentation and source code to figure out exactly how
+    it determines where to deliver a message.  The documentation is frequently
+    in error and extensive testing was required to discover the truth.  The
+    resulting procedure is encapsulated in a flowchart in the documentation
+    folder.
+  Added the "generator" program to create test scripts to check every possible
+    path through the recipient validation flowchart, both with spamdyke in place
+    and without (to check the flowchart is correct).  A program to generate the
+    scripts was required, since there are nearly 250K possible paths to test.
+  Added the value "invalid" to the option "reject-recipient" to check if a local
+    recipient address exists before accepting a message.  This validation
+    process uses the same logic as qmail when deciding whether/where to deliver
+    a message, so no extra steps are needed to make this work (e.g. maintaining
+    a list of valid addresses in a separate file).  If this process determines
+    a local address is valid, delivery is guaranteed.  This option should
+    eliminate qmail's habit of sending backscatter spam.
+  Added the value "unavailable" to the option "reject-recipient" to check if a
+    local recipient is accepting mail at the moment.  Probably as a holdover
+    from the elder days when people actually edited .qmail files by hand, qmail
+    checks file permissions on files and folders before delivering a message.
+    If they are set to certain values, qmail will queue the message until the
+    permissions are fixed or bounce the message if is queued too long.  In these
+    enlightened times, such permissions are more likely to be due to an error or
+    oversight than deliberate intent.
+  Added the options "qmail-assign-cdb", "qmail-defaultdelivery-file",
+    "qmail-envnoathost-file", "qmail-locals-file", "qmail-me-file",
+    "qmail-percenthack-file" and "qmail-virtualdomains-file" to allow spamdyke
+    to use different control files than qmail.  It's very unlikely anyone will
+    ever need these options (and it would be unwise to use them), but they're
+    available just in case.
+  Added the option "rejection-text-recipient-invalid" to set the rejection text
+    when the "invalid" filter on "reject-recipient" is triggered.
+  Added the option "rejection-text-recipient-unavailable" to set the rejection
+    text when the "unavailable" filter on "reject-recipient" is triggered.
+  Removed the function filter_recipient_local() and moved its logic into
+    filter_recipient_valid().
+  Removed the function filter_recipient_relay() and moved its logic into
+    filter_recipient_valid().
+  Changed the "help" option to just show a listing of available options without
+    help text.
+  Added the "more-help" option to show the full listing of options with all help
+    text.
+  Added the options "ip-relay-entry", "ip-relay-file", "rdns-relay-entry" and
+    "rdns-relay-file" to allow relaying from specific IPs and/or rDNS names,
+    since whitelisting no longer implies the ability to relay.  If any of these
+    options are matched, the RELAYCLIENT variable will be set before qmail is
+    started.
+  Created the "create_cdb" program to generate CDB files of arbitrary size,
+    filled with random data, for testing spamdyke's CDB validation routines.
+    create_cdb also has the ability to corrupt the generated CDB in seven ways;
+    this makes for more specific testing than simply using a file of random
+    garbage.
+  Removed all uses of the TESTSD_* environment variables from the test scripts
+    and replaced them with appropriate invocations of dnsdummy.  This allows the
+    test scripts to run without potential interference from external DNS
+    changes and without needing a running spamdyke server to find example
+    values.
+  Fixed smtp_filter() and middleman() to clear the list of saved recipient
+    addresses after printing the log messages.  This prevents duplicate log
+    messages when multiple email messages are delivered in the same connection.
+    Thanks to Teodor Milkov and David Davidov for reporting this one.
+  Added the "-skippatched" and "-skipunpatched" flags to the "run" scripts to
+    skip any tests that require a patched or unpatched version of qmail,
+    respectively.
+  Fixed a minor bug in find_username() that would truncate the last character
+    of the username when no domain is given.  This hasn't been a problem since
+    spamdyke rejects recipient addresses without domain names anyway, but one
+    of the recipient validation test scripts found it.
+  Added the option "tls-dhparams-file" option to read DH params from a file
+    for creating ephemeral keys during SSL/TLS key negotiation.  Thanks to
+    Marc Gregel for suggesting this one.
+  Changed all error messages to output the filename, function name and line
+    number that generated them, just like the debug and excessive messages.
+  Added a new log level, LOG_LEVEL_CONFIG_TEST, for config-test error messages.
+    The level is treated much the same as LOG_LEVEL_ERROR except the filename,
+    function name and line numbers are not printed.
+  Added a new decision level, FILTER_DECISION_AUTHENTICATED for authenticated
+    connections.  The filter routines use this level to distinguish between
+    connections that should be unfiltered due to authentication versus
+    whitelisting.
+  Added a new config option type: CONFIG_TYPE_ALIAS.  Options of this type are
+    aliases for other options.  This eliminates the duplication of values and
+    potential for oversights in the graylist/greylist options.
+  Added some code to the "run" script in the "tests" directory to try to detect
+    core dumps.  Some of the tests will declare success even if spamdyke
+    segfaults and cuts off the output prematurely.
+  Removed the unused functions reset_rejection() and skip_cfws().
+  Discovered spamdyke cannot read all the files it needs for recipient
+    validation during normal operation because they are owned by different users
+    with restrictive permissions and spamdyke does not run as root.  I'm not
+    sure how I missed that, but it completely moots more than a year of work.
+  Moved all the recipient valiation code into an external program named
+    "spamdyke-qrv".  This program is meant to only perform recipient validation
+    and nothing else, so it should be safe to run as root (at least safer than
+    running spamdyke as root).
+  Removed the options "qmail-assign-cdb", "qmail-defaultdelivery-file",
+    "qmail-envnoathost-file", "qmail-locals-file", "qmail-me-file" and
+    "qmail-percenthack-file" from spamdyke, since the recipient validation code
+    is gone.
+  Added the option "recipient-validation-command" for passing the path to
+    spamdyke-qrv, which will be called when recipient validation is needed.
+
+VERSION 4.3.1: 1/20/2012
+  Extended smtpdummy's error response to show the command that caused the error.
+  Fixed a bug in smtpdummy that prevented it from correctly processing message
+    data received in bursts.
+  Fixed a bug in middleman() that mistook qmail's response to the DATA command
+    for its response to the end of the message when header blacklisting was in
+    use.  This generated erroneous DENIED_OTHER messages when the qmail was slow
+    to respond to DATA for any reason.
+  Fixed an access violation in append_string_array() that caused crashes when
+    the header blacklist filter was active with configuration directories.
+
+VERSION 4.3.0: 1/15/2012
+  Fixed config-test message for a graylist domain folder when the domain is not
+    in the list of local domains from ERROR to INFO. Thanks to Eric Shubert
+    for reporting this one.
+  Fixed a bunch of copy-and-paste errors in the option_list array in
+    prepare_settings() where options were designated
+    CONFIG_TYPE_STRING_SINGLETON instead of CONFIG_TYPE_OPTION_SINGLETON or
+    CONFIG_TYPE_STRING_ARRAY instead of CONFIG_TYPE_OPTION_ARRAY.
+  Fixed configure script errors and compilation warnings on Debian 7, which
+    enables the new GCC flags -Waddress and -Wunused-but-set-variable by
+    default.  Thanks to Steve Cole for reporting this one.
+  Added some explanitory comments to spamdyke.h and spamdyke.c.
+  Added FILTER_FLAG_RETAIN and modified middleman() to buffer any data as long
+    as it is given.
+  Added FILTER_FLAG_CHILD_RESPONSE_INTERCEPT and modified middleman() to discard
+    any input from qmail when it is given.
+  Added FILTER_FLAG_DATA_CAPTURE and modified middleman() to capture qmail's
+    response to the end of the message data when it is given.
+  Fixed output_writeln() to send the data in bursts if more than one line is
+    given and no CRs need to be inserted.  Previously, all data was sent
+    line-by-line, even though middleman() was trying to send bursts of data when
+    possible.
+  Changed middleman() to buffer the names of the accepted recipients until after
+    the message data is sent, then check qmail's response to the message body
+    and print ALLOWED/DENIED for each recipient accordingly, along with the text
+    of qmail's response.
+  Added the options header-blacklist-entry and header-blacklist-file to block
+    messages based on the contents of their headers.
+  Added the option rejection-text-header-blacklist to control the message from
+    the header blacklist filter.
+  Added a flag to smtpdummy to force it to reject all message content with an
+    error.
+  Added a more complete usage message to smtpdummy.
+  Fixed a number of very serious errors in the usage of snprintf()/vsnprintf().
+    The return value was being used as the length of the string printed into
+    the buffer, but the return value really indicates the length of the string
+    that *could* be printed if the buffer were of infinite size. Because the
+    returned value could be larger than the buffer's size, this meant remotely
+    exploitable buffer overflows were possible, depending on spamdyke's
+    configuration.
+  Added options to smtpdummy to make it appear to process authentication (and
+    unconditionally succeed or fail).
+  Changed the ALLOWED log message to show the text given by qmail when the
+    message is accepted.
+
+VERSION 4.2.1: 1/4/2012
+  Added a filter to sendrecv so input containing "\r\n" will be translated into
+    CRLF without being interpreted as a line terminator (so multiple commands
+    can be sent in a single "packet") and input containing "\0" will be
+    translated into NULL bytes so NULL characters don't have to be embedded in
+    the test scripts.
+  Added support for the RSET command to smtpdummy.
+  Added a "priority" field to the input file for dnsdummy to force some
+    responses to be sent after others, no matter what order they were received.
+  Fixed nihdns_mx() to query names for A records using the query types
+    configured for MX queries, not A queries.  Thanks to Eric Shubert for
+    reporting this one.
+  Changed smtp_filter() and middleman() to discard any buffered input after TLS
+    is started.  This prevents the injection of commands into a secure session
+    by sending extra input in the same packet as the "STARTTLS" command.  Not
+    really a security problem but good practice anyway.  Thanks to Eric Shubert
+    for reporting this one.
+  Fixed a bug in examine_entry() that was cutting off 1-3 characters from the
+    end of target_entry every time it was called.
+  Changed check_ip_in_rdns_keyword() to return the line number of the matching
+    file as its return value and the name of the matchine file in a reference
+    variable.
+  Added reject_reason and strlen_reject_reason to struct rejection_data to
+    allow the triggered filter to return some text to indicate why it triggered.
+  Changed set_rejection() to accept new parameters to set reason text within the
+    rejection structure if available.
+  Changed set_rejection() to accept a new parameter to append to the rejection
+    text if available.
+  Added reset_rejection() to change either the rejection text or the reason text
+    within an existing rejection_data structure without erasing previously-set
+    values.
+  Changed nihdns_rbl(), check_dnsrbl() and check_rhsbl() not to accept a format
+    string or build part of the rejection message.  That job belongs to the
+    caller(s).
+  Changed filter_rdns_blacklist(), filter_rdns_blacklist_file(),
+    filter_rdns_blacklist_dir(), filter_ip_blacklist(),
+    filter_ip_in_rdns_blacklist(), filter_dns_rbl(), filter_dns_rhsbl(),
+    filter_sender_blacklist(), filter_sender_rhsbl() and
+    filter_recipient_blacklist() to save the reason for their rejection in the
+    reject_reason variable in rejection_data.
+  Changed the log messages showing ALLOWED/DENIED to always output the "reason:"
+    field and fill it with the text returned by the triggered filter so the
+    sysadmin can figure out what happened or "(empty)" if no text was saved.
+    Thanks to Eric Shubert for suggesting this one.
+  Changed the way DNS timeout values are read from the configuration file,
+    the command line, /etc/resolv.conf and the environment so that values given
+    in the config file or on the command line are not overridden by values in
+    /etc/resolv.conf or the environment.  Thanks to Teodor Milkov for reporting
+    this one.
+  Changed the reject-empty-rdns filter, the IP-related black/whitelist filters
+    and the IP-related RBL filters to skip their tests if the incoming IP address
+    is 0.0.0.0.  This is for connections from IPv6 hosts -- those filters can be
+    skipped until full IPv6 support can be added.  Thanks to Daniel Anliker for
+    suggesting this.
+  Changed the way the flag FILTER_DECISION_TRANSIENT_DO_NOT_FILTER is handled by
+    smtp_filter() and middleman() so a transient non-rejection (e.g a recipient
+    whitelist) isn't held over to later recipients.  The interaction between
+    the recipient whitelist and the graylist filter was fixed in version 4.0.0
+    but an issue still remained between recipient whitelists and other
+    non-transient rejections like the missing rDNS filter.  Thanks to bischowski
+    for reporting this one.
+  Changed smtpdummy to use memchr() instead of strchr() so testing input with
+    NULL bytes will work correctly.
+
+VERSION 4.2.0: 2/5/2011
+  Changed read_file() to return the number of usable lines read, instead of the
+    total number of lines (including comments and whitespace).
+  Fixed a huge thinko in many calls to read_file() -- when the function returns
+    0, the returned value is NULL.  This was causing spamdyke to crash when no
+    content was read from files by "dns-blacklist-file", "dns-whitelist-file",
+    "rhs-blacklist-file", "rhs-whitelist-file" and "hostname-file".  Thanks
+    to David Stiller for reporting this one and providing a lot of help in
+    tracking it down.
+  Added the option "tls-cipher-list" for specifying the list of ciphers to use
+    in SSL/TLS connections.  This won't be an option many people will ever use,
+    but in specific setups it is required.  Thanks to Chris Boulton for
+    suggesting this one and producing a patch to implement it.
+  Added a new value to "tls-level": "smtp-no-passthrough" to allow spamdyke to
+    offer TLS but prevent it from passing TLS through to qmail if the SSL
+    library cannot be initialized for some reason.
+  Fixed a bug in smtp_filter that allowed open relaying when spamdyke was
+    configured with "local-domains-entry" instead of "local-domains-file".
+  Moved code from do_spamdyke() that set stdin and stdout sockets to
+    non-blocking into tls_read() and tls_write() instead.  Setting the sockets
+    to non-blocking through the entire run was causing some strange behavior
+    where logging would stop after a series of large inputs.
+  Refactored the address parser (yet again) to fix a bug that wasn't handling
+    routing addresses properly.  Thanks to Chris Boulton for reporting this one.
+  Fixed process_config_file() to not reset a "multiple" value to default if it
+    was deliberately cleared during configuration.
+  Fixed prepare_settings() to initialize all default values before processing
+    the command line or configuration files so a "multiple" value can be cleared
+    during configuration.
+  Fixed configure.ac to use a gcc #pragma command to treat format warnings as
+    errors instead of relying on AC_LANG_WERROR (which doesn't always work).
+  Added the options "dns-query-type-a", "dns-query-type-mx",
+    "dns-query-type-ptr" and "dns-query-type-rbl" to limit the types of DNS
+    queries that can be sent for different purposes.  Thanks to Teodor Milkov
+    for suggesting this one.
+  Fixed a bug that caused a timeout whenever a post-RCPT filter is triggered
+    on a non-local address.  spamdyke is supposed to close the connection to
+    qmail and wait for its exit, but instead was just waiting for its exit,
+    leading to unnecessary timeouts.  Thanks to Ulrich C. Manns for reporting
+    this one.
+  Fixed a typo in policy.php.example.  Thanks to Richard Lamse for reporting
+    this one.
+  Fixed compiler warnings on Fedora 11.  Thanks to Ertan Orhan for reporting
+    this one.
+  Fixed a bug in sendrecv where an uninitialized variable was causing erroneous
+    stalls and timeouts in CentOS 5.5.
+
+VERSION 4.1.0: 7/3/2010
+  Changed the option "hostname-file" to read /var/qmail/control/me by default.
+  Added the option "dns-resolv-conf" to read the nameserver from a file other
+    than /etc/resolv.conf if necessary.  Multiple files can be read, if needed.
+  Changed all uses of strncpy() to memcpy() because strncpy() will fill the
+    remainder of the destination buffer with zeroes if the source string is
+    too short.  This is not needed because all strings are being explicitly
+    terminated after copies anyway.
+  Added two new parameters to search_file() to allow the matching line data to
+    be returned to the caller.
+  Changed process_access() to save the contents of the RELAYCLIENT environment
+    variable, if set.
+  Added the timefilter program to the utils folder.
+  Reversed a small change to spamdyke_log() made 4.0.8 that will prevent buffer
+    overflows in obscure situations.
+  Changed is_ip_in_name() to look for more patterns of IP addresses in rDNS
+    names: 044.033.022.011, 44.033.022.011, 44.33.022.011 and 44.33.22.011.
+    Thanks to Eduard Svarc for suggesting this one.
+  Changed the syslog output to include an "encryption:" tag at the end that
+    shows the current status of TLS/SSL encryption.  Thanks to Eric Shubert for
+    suggesting this one.
+  Added a "-R" option to smtpdummy so it will reject all recipients.
+  Completely rewrote find_address() to completely conform to RFC 2822 when
+    parsing addresses, including quoting, comments, folded whitespace and
+    all the rest.
+  Added the option "reject-identical-sender-recipient" to block any messages
+    where the sender and recipient are the same.  Thanks to almost everyone
+    on the mailing list for suggesting this one.
+  Changed nihdns_mx() to tolerate MX records that contain IP addresses (illegal)
+    instead of names.
+  Fixed Makefile.in to use the CPPFLAGS variable from the "configure" script, if
+    the user provided it in an environment variable.  Thanks to Iavor Stoev for
+    reporting this one.
+  Fixed the "configure" script to correctly include header files on FreeBSD 7.0.
+    Thanks to Andrew Khon for reporting this one.
+  Added a "-S" flag to sendrecv to prevent it from starting a TLS session when
+    it sees "STARTTLS".
+  Improved sendrecv's usage display to document what each option does.
+  Changed do_spamdyke() to set the stdin and stdout file descriptors to
+    nonblocking before calling middleman().  This works around a bug in the SSL
+    library that will block forever waiting for input, even after SSL_pending()
+    and/or select() has already indicated the socket is ready.  Thanks to
+    Teodor Milkov for identifying this problem more than a year ago and trog for
+    producing a patch to fix it!
+  Fixed process_config_file() to reject configuration file lines with
+    bad/missing characters.
+  Fixed process_config_file() to print an "unknown option" error message instead
+    of an "illegal option" message when an unknown option is found in a
+    configuration file.
+  Added option "rejection-text-identical-sender-recipient" to set the rejection
+    message for the identical sender/recipient filter.
+  Created dnsdummy to simulate a nameserver but exit after a short while for
+    testing spamdyke's DNS routines.
+  Converted all DNS-related tests to use dnsdummy and removed all references to
+    spamdyke.org and silence.org.  This will also allow the removal of the
+    (hundreds of) bogus entries from the spamdyke.org zone file.
+  Removed the use of getprotobyname() from dns.c and used the defined protocol
+    values in netinet/in.h.
+  Changed nihdns_query() to retry DNS queries via TCP if the response received
+    via UDP has the "truncation" flag set (indicating the answers are too large
+    for a UDP packet).  Thanks to Roland Moelle for suggesting this one.
+  Added option "dns-tcp" to control if spamdyke will retry DNS queries via TCP.
+  Added option "dns-spoof" to control if spamdyke will attempt to detect DNS
+    spoofing and, if so, what it should do about it.
+  Fixed smtp_filter() to offer and accept SMTP AUTH (when appropriate) even if
+    the connection is already whitelisted.  Thanks to Ratko Rudic for
+    reporting this one.
+
+VERSION 4.0.10: 12/17/2008
+  Added a parameter to nihdns_a() to return the IP address to the caller.
+  Changed do_spamdyke() to assume the value of TCPREMOTEIP is a name if it
+    can't be parsed as an IP address.  It will now search for an A record and
+    use the results (if any) as the remote IP address.  The environment will
+    also be updated to contain the IP address, so child processes won't have
+    to repeat this work.  This works around a bug in Plesk 9 that sets
+    TCPREMOTEIP to "localhost" for local connections.  Thanks to Medovarszky
+    Zoltan and Christian Aust for reporting this one.
+
+VERSION 4.0.9: 12/1/2008
+  Fixed examine_entry() to repeatedly search for matches within the target
+    string instead of stopping after the first one.  This bug was preventing
+    blacklist entries like "@example.com" from matching
+    "foo.example.com@example.com".  Thanks to John Devenport for reporting this
+    one.
+  Fixed config_test_spamdyke_binary() to actually search the PATH instead of
+    just repeatedly checking for the binary in the current directory.  This was
+    a cut-and-paste error.  Thanks to John Hallam for reporting this one.
+  Fixed config_test_spamdyke_binary() to check if the object it found is really
+    an executable before checking its permissions.
+  Added some extra debugging output to find_environment_variable(),
+    config_test_spamdyke_binary() and find_path().
+
+VERSION 4.0.8: 11/5/2008
+  Changed spamdyke_log() to send all messages to stderr (when appropriate) using
+    a single call to vfprintf() by adding newline characters and PID prefixes to
+    the format before outputting anything.  This is necessary to work around a
+    problem with the design of DJB's multilog program, which uses a single pipe
+    to accept input from all processes and thus cannot keep log messages
+    separate.  This means partial output from some spamdyke processes could
+    overlap output from other spamdyke processes when the load rises (a race
+    condition).  Thanks to Philip Nix Guru for reporting this one.
+
+VERSION 4.0.7: 10/17/2008
+  Changed Makefile.in to compile configuration.c in two steps: first use gcc
+    to produce the preprocessed source, then use gcc to compile it.  For some
+    reason, gcc crashes on FreeBSD 6.0 when the file is compiled in one step.
+    Thanks to K. Shantanu for reporting this one and Felix Buenemann for
+    suggesting the fix.
+
+VERSION 4.0.6: 10/16/2008
+  Fixed a problem in examine_ip_in_rdns_keyword_entry() that was not correctly
+    terminating the end of the keyword buffer, causing strstr() to search too
+    far, leading to false negatives (and potentially segmentation faults).
+    Thanks to Erald Troja for reporting this one.
+  Fixed another problem in middleman() that was not correctly replacing _all_
+    of qmail's AUTH advertisements when the "smtp-auth-level" option is
+    "always" or "always-encrypted".  Thanks to Youri Kravatsky for reporting
+    this one (again).
+  Fixed the fix to a bug in nihdns_query() that was setting
+    return_target_name_index to 0 in all cases.  This was causing log messages
+    to print the first RBL/RHSBL name instead of the one that actually matched.
+    Thanks to Arthur Girardi for reporting this one (again).
+  Reverted a change from 4.0.5 -- removing the usable_buf_input flag from
+    middleman() meant could only tell if there was input in the buffer, not if
+    any of it was actually usable.  If the remote server delays sending its
+    data for any reason, middleman() will loop rapidly to continually check if
+    its buffered data can be sent to qmail.  Removing the flag meant spamdyke
+    was consuming 100% CPU while receiving messages with large attachments.
+    Thanks to Paulo Henrique Fonseca for reporting this one.
+  Added the "cputime" program to the "tests" folder to measure the CPU time
+    used by a process.  Neither the shell "time" command nor the POSIX "time"
+    command seem to do that.
+  Changed sendrecv to always wait() for its child processes so CPU accounting
+    will be performed correctly.
+  Fixed check_rhsbl() to correctly return the name of the matching RHSBL instead
+    of an index that could be beyond the end of the array.
+  Changed the values of LOG_USE_CONFIG_TEST, LOG_USE_STDERR and LOG_USE_SYSLOG
+    to make none of them equal to 0.  Because the "log-target" option is a
+    CONFIG_TYPE_NAME_MULTIPLE option, it is set to 0 until the command line and
+    all configuration files are parsed.  When LOG_USE_CONFIG_TEST is 0, the
+    progress messages from process_config_file() are sent to stderr until the
+    configuration file is completely loaded.  For Plesk users, xinetd sends
+    stderr to the network connection, so the remote server gets the output.
+    Thanks to Arthur Girdari for reporting this one and helping track it down.
+
+VERSION 4.0.5: 10/13/2008
+VERSION 4.0.5-beta4: 10/8/2008
+  Fixed a serious problem in middleman() that was performing pointer arithmetic
+    on a NULL pointer when the remote server closed the connection unexpectedly.
+    This was causing segmentation faults when attempts were made to read from
+    the resulting addresses.  Many, many thanks to David Stiller for reporting
+    this one and providing tons of help to nail it down.
+VERSION 4.0.5-beta3: 10/6/2008
+  Fixed a serious problem in read_file() that was losing the pointer to a
+    pre-allocated array, then reallocating the array and assuming the first few
+    indexes were still valid.  This was happening when "-entry" and "-file"
+    options were being used together and resulting in segmentation faults.
+    Many, many thanks to David Stiller for reporting this one and providing
+    tons of help to nail it down.
+VERSION 4.0.5-beta2: 10/4/2008
+  Rewrote the address parser so it will now correctly handle strange/invalid
+    addresses like "MAIL FROM:<@>".  Incorrect parsing was causing problems with
+    the graylist filter's path creation (among other things).  Thanks to Erald
+    Troja for reporting this one.
+VERSION 4.0.5-beta1: 9/27/2008
+  Fixed a typo in filter_sender_rhsbl() that was printing the wrong verbose log
+    message when an RHSBL match was found ("FILTER_SENDER_BLACKLIST" instead of
+    "FILTER_RHSBL_MATCH").  Thanks to Arthur Girardi for reporting this one.
+  Fixed a bug in nihdns_query() that was setting the return_target_name_index
+    variable to values beyond the range of the target_name_array array.  This
+    was causing log messages to print garbage and could cause segmentation
+    faults.  Thanks to Arthur Girardi for reporting this one.
+  Fixed middleman() to use memchr() instead of strchr().  When presented with
+    message content that contains null bytes, strchr() won't search beyond them
+    and so can't find line terminators.  Of course, email isn't supposed to
+    contain unencoded null bytes but apparently not everyone knows that.
+    Without line terminators, all connections would hang and eventually time
+    out.  Thanks to Arthur Girardi for reporting this one.
+  Fixed sendrecv to use memchr() instead of strchr() so tests involving null
+    characters will work correctly.  Thanks to Arthur Girardi for reporting
+    this one.
+  Reordered some of the operations in free_current_options() to explicitly set
+    pointers to static buffers when the current_options structure is
+    deallocated.
+  Fixed a serious ordering problem in smtp_filter() that would close the
+    connection to qmail (forcing qmail to quit) after the first bad recipient
+    was given, even if a configuration directory was in use.  If the second
+    recipient was good, qmail would already be closed and dead.  Thanks to
+    David Stiller for reporting this one.
+  Removed some unnecessary calls to strlen() in configuration.c in an attempt
+    to figure out why spamdyke is (occasionally) crashing as it exits.
+  Added a timeout flag to smtpdummy to cause it to quit with a non-zero exit
+    code after some number of seconds idle.
+  Changed smtpdummy to send some extra greeting banners after EHLO.
+  Changed smtpdummy to accept a flag to optionally send an AUTH advertisement
+    after EHLO.
+  Fixed middleman() to correctly replace any AUTH advertisements when
+    "smtp-auth-level" is "always" or "always-encrypted" by including a
+    continuation character when appropriate.  Thanks to Youri Kravatsky for
+    reporting this one.
+  Changed middleman() to check the idle timeout setting when qmail is closed.
+    If it is 0 (deactivated), it is set to 1200 (20 minutes).  This is not
+    backwards incompatible because qmail uses a 20 minute idle timeout while
+    it's running.  Deactivated idle timeouts are causing a lot of problems
+    on mail servers when remote clients never disconnect.  Thanks to
+    Matthew Kettlewell for reporting this one.
+
+VERSION 4.0.4: 9/5/2008
+  Moved the code for loading configuration files into prepare_settings() from
+    do_spamdyke().  When the default value for the "log-target" option was
+    being set before the configuration files were read, the syslog option
+    could be incorrectly set, even if stderr was specified in a file.
+    Thanks to Eric Shubert for reporting this one.
+  Changed the configure script to detect environments where printf()/scanf()
+    use "%ld" for 64-bit integers instead of "%lld" (CentOS 64-bit).  This
+    wouldn't be necessary if the gcc authors could grasp the idea that
+    "long int" and "long long int" may be interchangable and not emit warnings.
+    Thanks to kjl for reporting this one.
+
+VERSION 4.0.3: 8/12/2008
+  Changed the configure script to detect environments where printf()/scanf()
+    use "%qd" for 64-bit integers instead of "%lld" (FreeBSD).  Thanks to
+    Shane Bywater for reporting this one.
+  Fixed load_resolver_file() to ignore invalid/unparsable nameserver values
+    in /etc/resolv.conf and default to 127.0.0.1 if no valid entries are
+    found.  Thanks to slamp slamp for reporting this one.
+
+VERSION 4.0.2: 8/6/2008
+  Fixed a bug in filter_graylist() that was creating infinitely deep "_none"
+    directories.  The special-case conversion code added in 4.0.1 was not
+    checking to see if "_none" was a file or a directory and performing the
+    conversion every time.  Thanks to Bob Alanis for reporting this one.
+
+VERSION 4.0.1: 7/17/2008
+  Fixed a bug in filter_graylist() that was generating errors trying to convert
+    an old-style graylist entry to the new structure.  When the sender address
+    is empty, the old entry is named "_none" and the code was trying to move it
+    to "_none/_none" which is obviously not possible.  Thanks to David Stiller
+    for reporting this one.
+  Fixed the grace values in prepare_list() and added a new field to the 
+    spamdyke_option structure for running actions after all values have been
+    set, whether any flags were set or not.  These changes allow spamdyke to
+    reject connections as early as possible, possibly not even starting up
+    qmail, depending on the configuration.  Prior to this fix, spamdyke was
+    allowing TLS passthrough for connections that should have been blocked
+    when STARTTLS was given because no whitelists were given and SMTP AUTH
+    was not possible.  Thanks to Sergio Minini for reporting this one.
+  Fixed a double-free() error in free_current_options() that was causing
+    spamdyke to crash if the "rejection-text-graylist" option was used from
+    a configuration directory.  This bug was triggered because the option
+    has the alternate "rejection-text-greylist" form that uses the same
+    variable.  After the free() was taking place, the variable was not being
+    set to NULL, so the second option caused a second free().
+  Fixed a compiler warning on Solaris.
+
+VERSION 4.0.0: 7/14/2008
+VERSION 4.0.0-rc1: 7/7/2008
+  Finished updating the documentation for version 4.0.0.
+VERSION 4.0.0-beta3: 7/2/2008
+  Fixed a bug in set_config_value() that was returning an error every time a
+    string was appended to a string array option that already had at least one
+    value.  This was preventing the post-connect filters from working if a
+    file in a configuration directory set an additional value on a string array.
+  Fixed filter_earlytalker() to prevent spurious error messages when
+    greeting-delay-secs is set from a configuration file and a configuration
+    directory is also in use.
+  Added the options "rejection-text-auth-failure",
+    "rejection-text-auth-unknown", "rejection-text-tls-failure" and
+    "rejection-text-zero-recipients".
+VERSION 4.0.0-beta2: 6/12/2008
+  Fixed nihdns_expand() to correctly terminate the expanded strings.
+  Fixed filter_sender_no_mx() to not try to check for MX records if the sender
+    domain is empty.
+  Fixed find_address() to correctly handle empty senders with extra paramters,
+    e.g. "MAIL FROM:<> SIZE=1234" should return an empty sender, not
+    "SIZE=1234".
+  Changed output_writeln() to append the process ID and a random number to the
+    end of the full log filename, so several instances of spamdyke started
+    within the same second will not try to use the same filename.
+  Changed do_spamdyke()'s usage of srandom() to use the current time multiplied
+    by the process ID so multiple spamdyke processes started within the same
+    second will not use the same random seed.
+  Added the option "rejection-text-greylist" as an alias of
+    "rejection-text-graylist".
+VERSION 4.0.0-beta1: 5/31/2008
+  NOT BACKWARDS COMPATIBLE: Added a new log level -- VERBOSE -- and reorganized
+    the log message levels a bit.  ERROR now includes only critical errors like
+    low memory, network errors (not including protocol errors), filesystem
+    permission errors, configuration-related errors and config-test errors.
+    INFO is only for traffic logging and config-test success/info messages.
+    VERBOSE is for non-critical errors like network errors caused by the remote
+    host, SMTP/DNS/SSL protocol errors, child process messages (exit status
+    and/or runtime errors) and config-test status messages.  DEBUG is for
+    high-level debugging output to show processing sequence.  EXCESSIVE is for
+    low-level debugging output to show progress and data.
+  Added the "disable-config-test" option to the configure script to allow
+    spamdyke to be built without the configuration testing code.  This reduces
+    the size of the spamdyke binary by as much as 48KB (19%).  By default, the
+    configuration testing code is included.
+  Added the "without-debug-output" option to the configure script to allow
+    spamdyke to be built without the "debug" output.  This decreases the size of
+    the spamdyke binary by as much as 8KB (3%).  By default, the debugging
+    output is included.
+  Added the "with-excessive-output" option to the configure script to allow
+    spamdyke to be built with the "excessive" output.  This increases the size
+    of the spamdyke binary by as much as 16KB (6%).  By default, the excessive
+    output is not included.
+  Changed the version string to show "+CONFIGTEST", "+DEBUG" and "+EXCESSIVE" if
+    spamdyke is compiled with the config-test option, debugging output and
+    excessive debugging output, respectively.
+  Fixed a bug in dns_rbl() that would crash spamdyke if excessive logging was
+    enabled and a DNS TXT response was received.
+  Changed dns_get() to accept both a list of target addresses and target types,
+    then query them all simultaneously.  Since DNS RBL and DNS RHSBL checks
+    only need one positive result to finish, this method is much faster than
+    querying each name in sequence, especially for sites that use many RBLs
+    and/or RHSBLs.
+  Renamed all of the dns_* functions to nihdns_* to avoid name collisions with
+    the system resolver library.
+  Added nihdns_expand() and nihdns_skip() to replace dn_expand() and dn_skip().
+  Changed the excessive log statements to print the function name, the file
+    and line number when the log message is generated.
+  Added the IP address of the remote server to the header of log files generated
+    by full logging.
+  Changed do_spamdyke() to find the remote server's rDNS name after the command
+    line and config file have been processed, so the DNS debugging output can
+    be printed into the full log file (if desired).
+  NOT BACKWARDS COMPATIBLE: Changed the file naming convention for full log
+    files not to include the remote server's rDNS name or the remote server's
+    IP address because the log file may be opened before that information is
+    available.
+  Changed config_test_child_capabilities() to recommend recompiling spamdyke
+    with TLS support if appropriate.
+  Added "tls-level" option to prevent TLS support or to offer SMTPS.
+  Changed output_write_rejection() to conditionally append the policy URL to the
+    rejection text based on which message is being printed.  There's no need to
+    append the policy URL to an SMTP AUTH success message, for example.
+  Changed process_command_line() and config_test() to search for (and set)
+    multiple environment variables if the remote server's IP address isn't found
+    in TCPREMOTEIP.  Using REMOTE_HOST makes spamdyke compatible with older
+    Linux inetd installations.  Thanks to Venkat Iyer for suggesting this one.
+  Replaced the T_* DNS type definitions with new values defined in spamdyke.h.
+  Defined the nihdns_header structure and the MAX_PACKET_SIZE, NIHDNS_GETINT16
+    and NIHDNS_GETINT32 macros to replace values from the resolver header files.
+  Created load_resolver_file() to load and parse the system resolver
+    configuration file (typically /etc/resolv.conf).
+  Changed nihdns_initialize() to call load_resolver_file() instead of
+    res_init().
+  Added a current_environment to the filter_settings structure to hold the
+    current effective environment (as modified by any upstack callers).  This
+    allows the envp parameter to be removed from nearly every function
+    declaration.  The number of functions expecting the environment pointer
+    was getting out of hand.
+  Removed the checks for the resolver header files from the configure script,
+    as spamdyke no longer needs them.
+  Added the option "dns-level" to allow DNS traffic to be turned off entirely,
+    set to imitate the standard system resolver library or set to behave more
+    aggressively than the standard system resolver.  Thanks to Jake for
+    suggesting this one.
+  Added the options "dns-server-ip" and "dns-server-ip-primary" so different DNS
+    servers can be specified than what the rest of the system uses.
+  Added the options "dns-max-retries-total" and "dns-max-retries-primary" to
+    control the number of retransmissions made during DNS queries.
+  Added the option "dns-timeout-secs" to control how long spamdyke will wait for
+    a response to a DNS query.
+  Added the option "run-as-user" to change user/group IDs during normal
+    operation.  tcpserver already does this but anyone running from a
+    "superserver" like inetd can use this to run under a non-root user.  Thanks
+    to Allen Clark for suggesting this one.
+  NOT BACKWARDS COMPATIBLE: Removed the "config-test-user" option, as it is now
+    replaced by "run-as-user".
+  Added the option "smtp-auth-level" to control SMTP AUTH behavior.  AUTH can
+    now be blocked entirely, observed only, provided only when qmail doesn't
+    offer it or always offered/processed by spamdyke.
+  NOT BACKWARDS COMPATIBLE: Removed the "smtp-auth-command-encryption" option,
+    as it is now replaced by "smtp-auth-level".
+  Added the option "filter-level" to allow all connections, reject all
+    connections, reject all connections that do not authenticate or select
+    normal behavior (configured filters).
+  Changed middleman() to create a log entry saying "TLS_ENCRYPTED" when TLS
+    data is passed through and spamdyke cannot determine the sender or
+    recipient(s).
+  Added a template spamdyke.conf file, contributed by Andrew Liles.
+  NOT BACKWARDS COMPATIBLE: Changed the graylist system to create a deeper
+    directory structure by creating folders for the senders' domain names.  This
+    will allow busy servers to use graylisting even when the number of sender
+    addresses could exceed the number of entries allowed in a folder.  Thanks
+    to Trog for suggesting this one.
+  Added some code to automatically move old-style graylist entries into the new
+    structure as they are accessed.  This will make upgrading to 4.0 simpler
+    but there is no code to gracefully revert to the old style if the spamdyke
+    version is downgraded.
+  Added a new function named read_file() to read an arbitrary range of lines
+    from a file into an array of strings.
+  Renamed the function formerly known as read_file() to read_file_first_line()
+    and refactored it to call read_file() internally.
+  Changed config_test_graylist() to load the contents of the local domains files
+    (if given) and compare the local domains to the list of domain directories
+    within the graylist folder.  If extra directories are found, errors are
+    printed.  If local domains exist that do not have domain directories, errors
+    are printed.
+  Changed output_writeln() to print a timestamp line into the log every time it
+    is called, even if the previous call sent data the same way.  This makes it
+    much easier to see how much data is being sent in each write().
+  Changed middleman() to send message data to qmail in large bursts instead of
+    line-by-line like the rest of the SMTP traffic.  For remote servers that
+    send their message data in large packets, this will be a big performance
+    boost.
+  Changed middleman() to use 16K buffers instead of 4K buffers so more message
+    data can be processed with fewer read()/write() calls (if the remote server
+    sends the message data in bursts).
+  Changed the MAX_BUF definition to 1023 instead of 4095.  Lots of stack
+    variables are declared using MAX_BUF as a length and 4K was not needed.
+    1K will save stack space and reduce spamdyke's memory footprint.
+  Changed dnsa, dnsany, dnsany_libc, dnscname, dnsmx, dnsns, dnsptr, dnssoa and
+    dnstxt to once again chase CNAMEs, effectively undoing the changes from
+    version 3.1.0.
+  Changed the warning messages when TLS support is not compiled/configured to
+    list the filters that cannot function.
+  Moved the filter code out of run_tests() and into separate functions for each
+    filter to make them easier to call individually.  The new functions are in
+    filter.c.
+  Moved the calls to the filter functions into do_spamdyke() and removed
+    run_tests().
+  Moved search_ip() and is_ip_in_name() into filter.c.
+  Moved the logic in check_rdns_resolve(), check_country_code(),
+    check_rdns_keywords() and check_earlytalker() into filter_rdns_resolve(),
+    filter_ip_in_rdns_cc(), filter_ip_in_rdns() and filter_earlytalker(),
+    respectively.  Those functions were only being called from one place anyway,
+    so having the separate functions didn't seem to make much sense.
+  Moved check_rbl() and check_rhsbl() into filter.c.
+  Moved the logic for sender whitelist files, sender RHSWLs, sender blacklist
+    files, sender RHSBLs, required SMTP AUTH and missing sender MX records from
+    smtp_filter() into filter_sender_whitelist(), filter_sender_rhswl(),
+    filter_sender_blacklist(), filter_sender_rhsbl(), filter_smtp_auth() and
+    filter_sender_no_mx(), respectively.
+  Moved the logic for recipient whitelist files, unqualified recipients,
+    relaying, maximum recipients, recipient blacklist files and graylisting
+    into filter_recipient_whitelist(), filter_recipient_local(),
+    filter_recipient_relay(), filter_recipient_max(),
+    filter_recipient_blacklist() and filter_recipient_graylist(), respectively.
+  Fixed the configure script to look for libgnugetopt.  This will allow spamdyke
+    to compile on older versions of Solaris where libc does not include
+    getopt_long().  Thanks to Davide Bozzelli for reporting and helping me fix
+    this one.
+  Refactored tls_error() to construct the error message in a static buffer and
+    return a pointer to that buffer.  This way, the caller can decide what log
+    level to use for the message instead of logging all TLS messages as ERROR.
+  Changed search_domain_directory() to return the path to the matching file when
+    successful and NULL when unsuccessful.
+  Fixed do_spamdyke() to replace the TCPLOCALPORT environment variable with a
+    value of 25 and to remove the SMTPS environment variable, if present.  Some
+    patched qmail installations (e.g. Plesk) use the TCPLOCALPORT value to
+    determine whether to start their own SMTPS and tunnelling an SSL session
+    within an SSL session doesn't work well.  Thanks to Otto Berger for
+    reporting this one.  Also, some other qmail-related programs (notably
+    vpopmail's vckpw) alter their behavior when TCPLOCALPORT is not 25.
+  Added log messages to every filter routine to make it clear when (and why) a
+    filter is triggered.  This should help troubleshooting.  Thanks to Frederic
+    Nouvian for suggesting this one.
+  Audited all heap usage to ensure all allocated memory is being correctly
+    deallocated.  spamdyke is a short-lived process so memory leaks aren't
+    really a concern at the moment but someday that may change.  In any case,
+    proper memory management is never a bad thing.
+  NOT BACKWARDS COMPATIBLE: Changed the default value of "idle-timeout-secs"
+    to 0 (disabled) instead of 60.  This was causing problems in production with
+    slow/misbehaving clients.
+  Changed middleman() to simply close the connection to qmail when an error
+    occurs instead of sending <CRLF>.<CRLF>QUIT<CRLF> first.  Closing the
+    connection prevents qmail from sending partially-completed messages.  This
+    was causing problems with slow clients that were being disconnected for
+    timeouts.  When the client retried, the users were getting multiple copies
+    of incomplete messages.  Thanks to Chris Robinson for pointing this out.
+  Changed output_write_rejection() to append the rejection code to the policy
+    URL, if one was provided.  Thanks to Faris Raouf for suggesting this one.
+  Moved all of the variables that can be set by configuration options into a
+    new structure named option_set.
+  Moved output_writeln() from spamdyke.c to log.c.
+  Changed spamdyke_log() to call output_writeln() so all log messages will also
+    be printed to the full log file, if one exists.  This includes log messages
+    below the current log level, as long as they were compiled in.
+  Added print_configuration() to print the current configuration into the full
+    log file, wherever it differs from the defaults.
+  Changed spamdyke_log() to use more descriptive labels instead of "<<<", ">>>",
+    "<XX", etc.
+  Changed all instances where fprintf() outputs to a file to catch and log
+    errors.  This should help spamdyke behave more politely when something goes
+    wrong with the filesystem (e.g. out of space).
+  NOT BACKWARDS COMPATIBLE: Changed integer options that required specific
+    values to take strings instead.  "log-target" now takes "stderr" and
+    "syslog" instead of 0 and 1.  "log-level" now takes "none", "error", "info",
+    "verbose", "debug" and "excessive" instead of 0-5.  Integer values for these
+    options are no longer accepted.
+  Changed set_config_value() to process string values for integer options.
+  Changed usage() to print the valid string values for integer options.
+  Changed the "log-target" option to accept multiple values for anyone who wants
+    to log to both syslog and stderr.  Thanks to Davide Bozzelli for suggesting
+    this one.
+  Added the option "config-dir" to specify a directory to search for
+    configuration files.  The required structure is bit complex but it should
+    allow for incredible flexibility when configuring spamdyke for specific
+    situations.
+  Added the option "config-dir-search" to specify how the configuration
+    directory(ies) should be searched.
+  Changed process_config_file() to only print errors when it encounters illegal
+    or unparsable options in configuration files in a configuration directory
+    (as opposed to printing the usage header and exiting).
+  Changed do_spamdyke() and middleman() to delay calling the filter functions
+    until after "RCPT TO" is given, if a configuration directory is specified.
+  Changed prepare_settings() to allow some options to be used within files in
+    a configuration directory.
+  NOT BACKWARDS COMPATIBLE: Changed set_config_value() to handle two special
+    values: a value starting with "!" will unset that value, if it was
+    previously set.  A value of "!!!" will unset all values for that option.
+    This usage is only valid for string and named integer options.
+  NOT BACKWARDS COMPATIBLE: Renamed the "check-dnsrbl" option to
+    "dns-blacklist-entry", renamed the "check-rhsbl" option to
+    "rhs-blacklist-entry", renamed the "check-dns-whitelist" option to
+    "dns-whitelist-entry", renamed the "check-rhs-whitelist" option to
+    "rhs-whitelist-entry" and renamed the "ip-in-rdns-keyword-file" option to
+    "ip-in-rdns-keyword-blacklist-file".
+  Added the options "dns-blacklist-file", "dns-whitelist-file",
+    "rhs-blacklist-file" and "rhs-whitelist-file" to load the names of DNS RBLs,
+    DNS RWLs, DNS RHSBLs and DNS RHSWLs to be loaded from files, respectively.
+  Added the option "ip-in-rdns-keyword-whitelist-file" to whitelist connections
+    from remote servers whose rDNS names contain a keyword and the IP address.
+    Thanks to Andreas Galatis for suggesting this one.
+  Added the option "graylist-level" to set the behavior of the graylist filter.
+    The two options "always-create-dir" and "only-create-dir" will create domain
+    folders automatically if needed, eliminating the need to create the folders
+    manually when the domain is added to the server.  However, those two options
+    will not create folders for non-local domains (requiring the use of
+    "local-domains-file").
+  NOT BACKWARDS COMPATIBLE: Changed "graylist-dir" to require the use of
+    "graylist-level" before it will have any effect.
+  NOT BACKWARDS COMPATIBLE: Removed the "no-graylist-dir" option.  Its
+    functionality is now part of "graylist-level".
+  NOT BACKWARDS COMPATIBLE: Removed the "always-graylist-ip-file" and
+    "never-graylist-ip-file" options and moved their functionality to a new
+    option named "graylist-exception-ip-file".
+  NOT BACKWARDS COMPATIBLE: Removed the "always-graylist-rdns-file" and
+    "never-graylist-rdns-file" options and moved their functionality to a new
+    option named "graylist-exception-rdns-file".
+  NOT BACKWARDS COMPATIBLE: Removed the "always-graylist-rdns-dir" and
+    "never-graylist-rdns-dir" options and moved their functionality to a new
+    option named "graylist-exception-rdns-dir".
+  Added a test to config_test() to check if the option_list array is
+    alphabetized correctly.
+  Added a test to prepare_settings() to check if the short codes in the
+    option_list array are being mistakenly reused.
+  Changed set_config_value() to enforce maximum string lengths (if appropriate).
+  Changed set_config_value() to read integer values into a long integer so
+    values greater than INT32_MAX can be caught and reported.
+  NOT BACKWARDS COMPATIBLE: Set the maximum length of the "policy-url" option
+    to 100 characters.  The documentation had always stated this was the limit
+    but it was not being enforced in the code.
+  Added the options "rejection-text-access-denied",
+    "rejection-text-dns-blacklist", "rejection-text-earlytalker",
+    "rejection-text-empty-rdns", "rejection-text-graylist",
+    "rejection-text-ip-blacklist", "rejection-text-ip-in-cc-rdns",
+    "rejection-text-ip-in-rdns-keyword-blacklist",
+    "rejection-text-local-recipient", "rejection-text-max-recipients",
+    "rejection-text-missing-sender-mx", "rejection-text-other",
+    "rejection-text-rdns-blacklist", "rejection-text-recipient-blacklist",
+    "rejection-text-relaying-denied", "rejection-text-rhs-blacklist",
+    "rejection-text-sender-blacklist", "rejection-text-smtp-auth-required",
+    "rejection-text-timeout", "rejection-text-unresolvable-rdns" and
+    "rejection-text-reject-all" to allow the default rejection text to be
+    customized without editing the source code.  Thanks to Greg Cirino for
+    suggesting this one.
+  Moved the matching logic from search_file() into examine_entry() so it can be
+    called externally for a single string.
+  Moved the matching logic from search_tcprules_file() into
+    examine_tcprules_entry() so it can be called externally for a single string.
+  Added the options "graylist-exception-ip-entry",
+    "graylist-exception-rdns-entry", "ip-blacklist-entry", "ip-whitelist-entry",
+    "local-domain-entry", "rdns-blacklist-entry", "rdns-whitelist-entry",
+    "recipient-blacklist-entry", "recipient-whitelist-entry",
+    "sender-blacklist-entry", "sender-whitelist-entry",
+    "ip-in-rdns-keyword-blacklist-entry" and
+    "ip-in-rdns-keyword-whitelist-entry" to allow single entries to be
+    provided from the configuration file that would otherwise need to be read
+    from files (using corresponding "-file" options).
+  Fixed usage() so error messages from bad configuration options are sent to
+    stderr (and therefore logged by tcpserver) instead of being sent to stdout
+    (and therefore sent to the remote server).  Thanks to Jacob Billingsley for
+    reporting this one.
+  Changed config_test() to count the number of values given each "-entry" option
+    and recommend moving those values to a file if there are too many.
+  Changed the CONFIG_TYPE of the "-file" options that have corresponding "-dir"
+    options.
+  Changed config_test_file_read() and config_test_file_read_write() to count the
+    number of lines in readable files and print errors if the files are too long
+    and some content will be ignored.  If the number of lines are more than the
+    recommended length, a warning will be printed.
+  Changed the Makefile so "make install" will copy the spamdyke binary to
+    /usr/local/bin/spamdyke-x.y.z and create a soft link named
+    /usr/local/bin/spamdyke.  This makes it easier to roll back to a previous
+    version.  Thanks to Andreas Galatis for suggesting this one.
+  Moved the TODO list from the top of this file into a new file named TODO.txt.
+  Fixed a small bug in spamdyke's configure script that assumed the script was
+    being run under the bash shell.  Thanks to Amitai Schlair for reporting this
+    one.
+  Refactored the test scripts so the tests for root permissions, environment
+    variables and compiled options are now in the "run" script instead of in
+    each script that needs the features.  The duplicated code had become
+    inconvenient to maintain.
+  Added a README.txt file to the "tests" folder to describe the test scripts,
+    because some people seem to think they can help diagnose configuration
+    problems (they can't).
+  Fixed compiler warnings in dns.c on Ubuntu 6.  Thanks to Diederik Kohnhorst
+    for reporting this one.
+  Added three new formats to the "IP in rDNS" filters.  If the IP address is
+    11.22.33.44, spamdyke now searches for 11.022.033.044, 11.22.033.044 and
+    11.22.33.044.  Thanks to Pavel V. Yanchenko for suggesting this one.
+  Fixed smtp_filter() so a whitelisted recipient doesn't whitelist the entire
+    message, including blacklisted recipients.  Thanks to Venkat Iyer for
+    reporting this one.
+  Changed the sender whitelist and blacklist filters to allow the files/entries
+    to use "@" as a wildcard at the end of the entry, not just the start.
+  Changed stderr logging to print "spamdyke" and the process ID at the start of
+    the line, to make it easier to find spamdyke's messages when using multilog.
+    Thanks to Eric Shubert for suggesting this one.
+  Fixed the help text for the "max-recipients" option to state that a value of
+    0 disables the feature.  Thanks to Marcin Orlowski for reporting this one.
+  Added two new formats to the "IP in rDNS" filters.  If the IP address is
+    11.22.33.44, spamdyke now searches for 11.22.3344 and 11.223344.  Thanks
+    to Arne Metzger for suggesting this one.
+  Added a new option, "relay-level", to allow spamdyke's relaying filter to be
+    explicitly controlled.  This flag can be used to block all connections, to
+    prevent relay checking, to do normal relay checking or to allow all
+    connections (create an open relay).
+  Changed the option_list in prepare_settings() so the "config-file" option
+    does not call process_config_file() as it is processed.  Instead, it saves
+    the configuration file names in an array.  They are processed later, in
+    do_spamdyke(), after the entire command line has been processed and the
+    user ID has been switched.  Without this, configuration files were always
+    loaded using the credentials spamdyke starts with.
+  NOT BACKWARDS COMPATIBLE: Changed "max-recipients" to be enforced for all
+    connections, even local senders.  Bypassing the filter requires
+    authentication or whitelisting.
+  Added an index variable to the rejection_data structure to track which
+    rejection was used as a template for the currently assigned rejection.  This
+    is necessary because the messages can now be customized.
+  Updated the configure.ac script to check for stdint.h, inttypes.h, time.h,
+    sys/time.h, uint16_t, uint32_t, uint64_t and INADDR_LOOPBACK.  The logging
+    macros now declare their variable arguments using the old-style GCC notation
+    instead of the C99 style.  These changes allow spamdyke to compile on truly
+    ancient Unixes like FreeBSD 2.2.2 (released sometime between 1/1995 and
+    11/1998).  Thanks to VJ for reporting this one.
+  Added find_case_insensitive_needle() to convert the needle to lowercase and
+    run strstr().  This was necessary because (apparently) strcasestr() is not
+    available everywhere.
+  Added print_current_environment() to print the current environment variables
+    into the log file (if one exists).
+  Changed do_spamdyke() to print the remote server's IP address into the log
+    file after it has been found.
+
+VERSION 3.1.8 -- 5/21/2008
+  Fixed smtp_filter() to reject the DATA command if no valid recipients have
+    been specified.  Otherwise, a specific scenario could result in every
+    spamdyke installation being used as an open relay.  If the remote server
+    connects and gives one or more recipients that are rejected (for relaying or
+    blacklisting), then gives the DATA command, spamdyke will ignore all other
+    commands, assuming that message data is being transmitted.  However, because
+    all of the recipients were rejected, qmail will reject the DATA command.
+    From that point on, the remote server can give as many recipients as it
+    likes and spamdyke will ignore them all -- they will not be filtered at all.
+    After that, the remote server can give the DATA command and send the actual
+    message data.  Because spamdyke is controlling relaying, the RELAYCLIENT
+    environment variable is set and qmail won't check for relaying either.
+    Thanks to Mirko Buffoni for reporting this one.
+  Fixed compiling with gcc 3.4.6 (on old Gentoo installations), which requires
+    a "-Wp,-Wno-trampolines" flag to suppress a warning about trampoline
+    functions.  Thanks to Thorsten Puzich for reporting and helping me fix this
+    one.
+  Fixed compiling on CentOS 3.8, which installs the krb5.h in
+    /usr/kerberos/include instead of /usr/include.  Thanks to Bruce Schreiber
+    for reporting this one.
+  Changed middleman() to reset the idle timeout timer while waiting for qmail's
+    responses.  It's not fair to disconnect a remote server because qmail is
+    running slow.  The connection timeout timer is always enforced, however.
+  Fixed a bug in middleman() to reset the idle timeout timer every time data is
+    read from the remote server.  Previously, the timer was only reset when data
+    was read and the buffer was empty.  This was causing large messages from
+    fast remote servers to timeout during delivery.  Thanks to Eric Shubert for
+    reporting and helping me fix this one.
+
+VERSION 3.1.7 -- 4/6/2008
+  Fixed search_file() so a wildcard doesn't match every character, only ones
+    from a fixed set.  This prevents the entry "@example.com" from matching
+    "foo@notexample.com".  Thanks to Tom for reporting this one.
+
+VERSION 3.1.6 -- 2/10/2008
+  Fixed a serious bug in middleman() -- when the remote server sent its message
+    data and QUIT command in a burst and disconnected before spamdyke read() all
+    of the data, the last data returned from read() was printed twice.  This
+    could cause message corruption, especially in the case of attachments.
+  Fixed a serious bug in middleman() -- when the remote server sent its data
+    in bursts of 4096 bytes AND there were two lines of text in the data
+    AND the 4096th character was not a newline AND there was a delay between the
+    data bursts, memmove()ing the buffered data was causing corruption because
+    the moved data was not being properly re-terminated.  While processing the
+    remaining buffered data (and waiting for another burst from the remote
+    server), strchr() would seek past the end of the data to an old newline
+    character and middleman() would erroneously conclude the next line of data
+    was complete, ready for processing.  Many thanks to Andreas Galatis and
+    Dragomir Denev for reporting and helping me reproduce this one.
+  Added a -W flag to sendrecv to introduce a delay between message data bursts.
+  Added a -o flag to smtpdummy to save the message data to a file.
+
+VERSION 3.1.5 -- 1/22/2008
+  Fixed sendrecv to correctly process corrupted TLS negotiations instead of
+    covering up bugs in spamdyke.
+  Fixed spamdyke to not add garbage output at the beginning of TLS passthrough
+    negotiations.  This was causing SSL handshakes to fail.  Thanks to Ronnie
+    Tartar for reporting this one.
+
+VERSION 3.1.4 -- 1/21/2008
+  Fixed all of the Makefiles to remove a symbols directory Leopard's gcc seems
+    to create when compiling in debug mode.
+  Fixed middleman() to log the timeout message only once.
+  Fixed middleman() to not expect input from the child process when the child
+    process' input is being ignored or after the child process has exited.
+  Fixed middleman() to correctly handle a rare situation -- when the child
+    process was too slow responding that spamdyke's idle timeout was passed
+    AND spamdyke was processing TLS data AND there was still data in the SSL
+    buffer, spamdyke would loop infinitely, consuming 100% CPU.  This was a
+    very tricky bug to find and fix.  Thanks to Pablo Gonzalez and Paolo for
+    reporting this one and helping me debug it.
+  Fixed middleman() to send message data to the child process line-by-line,
+    even when the buffer is full.
+  Added a new test program: smtpdummy.  This one simulates an SMTP server and
+    can add delays after specific commands.
+  Changed sendrecv to use a 64K buffer for input and output data.
+  Changed sendrecv to kill the its child process after its timeout expires.
+  Changed sendrecv to optionally continue sending data in bursts after the end
+    for the message data.  Some mail servers do this.
+  Changed sendrecv to deliberately send corrupt data while TLS is active.
+  Changed test regression_009 to build its message payload at runtime instead
+    of including a 0.75M file.  This file was unnecesarily increasing the size
+    of the spamdyke tarball.
+  Fixed compiling on Solaris.  Again.  Thanks to Davide Bozzelli for reporting
+    this.  Again.  Sigh.
+
+VERSION 3.1.3 -- 1/3/2008
+  Fixed the format string LOG_INFO_DNS_TXT to assign the parameters correctly
+  and prevent bus errors when the DNS response text is long.
+
+VERSION 3.1.2 -- 12/11/2007
+  Fixed smtp_filter() to set a flag after some SMTP commands to force
+    middleman() to wait for input from the child process before proceeding.
+    Some (nonspammer) mail servers send their data in bursts without waiting for
+    responses.  This was causing spamdyke to skip logging (but not filtering)
+    if the DATA command was sent in a burst with RCPT TO.  Thanks to Sebastien
+    Guilbaud and Bucky Carr for reporting this one.
+  Added a "-b" flag to sendrecv to simulate servers that send their message data
+    (but not their SMTP commands) in bursts.
+
+VERSION 3.1.1 -- 11/12/2007
+  Added excessive logging to search_domain_directory() to log the directory
+    search pattern.
+  Changed all calls to spamdyke_log() to use the macros SPAMDYKE_LOG_NONE(),
+    SPAMDYKE_LOG_ERROR(), SPAMDYKE_LOG_INFO(), SPAMDYKE_LOG_DEBUG() and
+    SPAMDYKE_LOG_EXCESSIVE() instead.  The macro tests the current log level
+    without forcing a function call and also paves the way toward eliminating
+    some logging code at compile-time.
+  Fixed process_access() to correctly search for the RELAYCLIENT variable in
+    spamdyke's environment.  Thanks to Steve Cole for reporting this one.
+
+VERSION 3.1.0 -- 11/5/2007
+  Changed the "graylist-dir" and "no-graylist-dir" options to take multiple
+    directories for servers that are hosting so many domains that they can't
+    create enough domain folders in one place (wow).
+  Added minimum and maximum values to all integer options and changed
+    set_config_value() to generate error messages when values are out of range.
+  Change usage() to print minimum and maximum integer values.
+  Alphabetized the option list by long option name and changed
+    process_config_file() to use a binary search algorithm when identifying
+    directives, a theoretical improvement from O(n/2) to O(log n).
+  Changed prepare_settings() to create an array of options indexed by the short
+    option code.  This introduces some constant-time work (O(1)) and greater
+    memory usage.
+  Changed process_command_line() to use the indexed array of options,
+    theoretically reducing command line parsing work from O(n/2) to O(1).
+    This is a win if the command line has many parameters or if it has
+    parameters that are near the end of the unindexed option array.
+    Testing confirms a small performance gain.
+  Added command line options "config-test-smtpauth-username" and
+    "config-test-smtpauth-password".
+  Changed config_test_smtpauth() to run the authentication command(s) if a
+    username and password are provided.  This incorporates the functionality of
+    checkpassword into spamdyke.
+  Added the command line option "config-test-user" to change user and group IDs
+    before running the configuration tests.  This makes it easier to simulate
+    running as the mail server.
+  Changed process_config_file() and process_command_line() to print errors and
+    stop when they encounter an option that is not legal in that location.  At
+    the moment, "help", "version", "config-test",
+    "config-test-smtpauth-username", "config-test-smtpauth-password" and
+    "config-test-user" are not valid in files; all options are valid on the
+    command line.
+  Changed config_test_dir_read() and config_test_graylist() to never examine the
+    "." or ".." folders, even if readdir() and/or stat() report they are not
+    folders.  Thanks to Paulo Henrique for reporting this one.
+  Changed set_config_value() to remove trailing slashes from directory paths.
+  Added test_spamdyke_binary() to check if the spamdyke binary is setuid root
+    (it should not be).
+  Renamed test_settings() to config_test().
+  Moved all of the configuration test functions to config_test.[ch] -- they were
+    cluttering up configuration.c.
+  Made a few small updates to the help message text.
+  Added additional vchkpw exit codes to exec_checkpassword() to explain why
+    vchkpw exited, since it doesn't follow DJB's published checkpassword API.
+  Moved md5.[ch] from the "utils" folder to the "spamdyke" folder and updated
+    Makefile to compile them into spamdyke.
+  Removed passwordcheck from the "utils" folder since spamdyke now contains its
+    functionality.
+  Added a README file to the "utils" folder to answer the biggest FAQ about
+    those utilities.
+  Fixed exec_command() to connect the output pipe to the child process's stdin
+    instead of file descriptor 3.  The bug was due to copying
+    exec_checkpassword() and forgetting to change the value.
+  Renamed exec_checkpassword() to exec_checkpassword_argv() and changed its
+    arguments to expect a filename and an argument array.
+  Added exec_checkpassword() to parse a command string into an argument array
+    and call exec_checkpassword_argv().
+  Renamed exec_command() to exec_command_argv() and changed its
+    arguments to expect a filename and an argument array.
+  Added exec_command() to parse a command string into an argument array
+    and call exec_command_argv().
+  Fixed numerous bugs in exec_command_argv() that were preventing it from
+    actually gathering any input from the child process.
+  Changed exec_command_argv() and exec_checkpassword_argv() to always log their
+    child process errors to syslog, regardless of the user's preferences.
+    Otherwise, the errors will be lost.
+  Added the function find_path() to search the PATH for the given command
+    without executing it.
+  Changed exec_command_argv() and exec_checkpassword_argv() to use find_path()
+    to locate the executable before fork()ing to catch typos.  The child
+    processes then use execve() to execute the command instead of exec_path().
+    Otherwise, the parent has a hard time determining that the child process
+    quit because the command path was invalid.
+  Changed exec_command_argv() and exec_checkpassword_argv() not to wait
+    indefinitely for the child to exit after the timeout expires.
+  Changed dns_txt(), dns_ptr_lookup() and dns_mx() to limit the total number of
+    queries they will recursively perform.  This is to prevent a DoS situation
+    where some domain has an unreasonable number of chained (non-circular) CNAME
+    records.  The limit is (arbitrarily) set at 16.
+  Added the function config_test_child_capabilities() to test the qmail binary
+    for SMTP AUTH and TLS patches.  Depending on what is found, recommendations
+    for spamdyke flags are made.
+  Changed check_rdns_keywords() to allow top-level domains (like .com) to be
+    used as keywords.  This allows a way to reject connections from remote
+    servers with rDNS names that contain the IP address and a two-letter country
+    code.  Unlike check_country_code(), specific country codes can now be
+    chosen.
+  Fixed do_spamdyke() not to wait indefinitely for all child processes to exit.
+    This behavior was causing problems with DJB's recordio because recordio
+    fork()s and uses its parent process to exec() spamdyke.  This is very
+    unusual.  Changing wait(NULL) to waitpid() fixes the problem.  Thanks to
+    Bob Hutchinson for reporting this one.
+  Added dns_initialize() and dns_get() to perform DNS queries by sending UDP
+    packets instead of using the resolver library to do it.  The resolver
+    functions are just too slow and they try to do too much unnecessary work.
+    dns_get() performs multiple requests for records (one for each kind of
+    desired record) and, if no responses are received, sends requests to the
+    secondary nameservers as well.  Timeouts and retransmission times can now
+    be controlled.  This has resulted in a significant speedup in DNS
+    resolutions; testing shows as much as a 10x performance increase in some
+    situations.
+  Changed dns_txt(), dns_ptr_lookup() and dns_mx() to search all of the answers
+    for the desired answer type before recursively querying CNAME answers.  Some
+    nameservers always put the CNAME answers first, even if other answer types
+    are also given.  This should allow spamdyke to find answers faster when
+    domain admins have used a lot of CNAMEs.
+  Added dns_a() to perform A record queries and changed all uses of
+    gethostbyname() to use dns_a() instead.
+  Changed dnsa, dnsmx, dnsns, dnsptr, dnssoa and dnstxt in the "utils" folder to
+    only perform their specific queries, not ask for CNAME records as well.
+  Changed dnsa, dnsmx, dnsns, dnsptr, dnssoa and dnstxt in the "utils" folder to
+    send their own UDP packets instead of using the resolver library.
+  Added dnscname to the "utils" folder to perform CNAME queries.
+  Added dnsany to the "utils" folder to perform ANY queries and perform
+    recursive CNAME lookups.
+  Added "log-target" option to allow logging to stderr instead of syslog.  Some
+    people apparently like using the qmail-style "multilog" instead of syslog.
+    I can't understand why but I'm here to serve.  Thanks to John Hallam for
+    suggesting this one.
+  Changed all of the error messages about unexpected file types to specify what
+    file type was found -- "non-regular file" was too vague to be useful.
+  Changed the header in the files created by full logging to include the
+    spamdyke version.
+  Changed tls_end_inner() to use SSL_get_shutdown() to see if a shutdown signal
+    has already been received.  If SSL_shutdown() is used on a closed file
+    descriptor, spamdyke will crash with SIGPIPE.
+  Changed all instances of read(), write(), SSL_read() and SSL_write() to read
+    or write as many bytes as possible in each call.  This should provide a
+    significant performance increase.  The single-byte read()s and write()s
+    were only used because I had badly misunderstood the relationship between
+    select() and read()/write() -- blocking only occurs when select() indicates
+    a file descriptor is not ready.  If it is ready, read() and write() will
+    handle as many bytes as they can without blocking.  Thanks to Trog for
+    setting me straight on this one.
+  Rewrote most of sendrecv in the "tests" folder to use a multi-byte read().
+    Also took the opportunity to make sendrecv much faster and more polite, so
+    it doesn't consume 100% CPU while waiting for qmail output.
+  Fixed compiling errors on 64 bit Linux systems (Debian Etch x86_64 and Gentoo
+    AMD64).  Thanks to Juha-Pekka Jarvenpaa and FireBall for reporting this.
+  Added config_test_file_type() to use stat() to find a file's type if readdir()
+    either doesn't report it (Solaris) or reports "unknown" for all files (XFS).
+    Thanks to Paulo Henrique for reporting this one.
+  Fixed compiling errors on Solaris.  Thanks to Limperis Antonis for reporting
+    this.
+  Changed the logging severity of the "unable to write X bytes to file
+    descriptor" to debug instead of error.  99% of the time, the error occurs
+    because the remote client disconnected unexpectedly and there's nothing
+    the administrator can do about it anyway.
+  Changed do_spamdyke() to ignore SIGPIPE signals.
+  Changed do_spamdyke(), exec_command_argv() and exec_command_checkpassword()
+    to change the SIGPIPE signal handler back to default for child processes
+    after fork()ing but before exec()ing.
+  Added a new logging level: excessive (4).  It's to be used for printing very
+    detailed debugging statements.
+  Changed process_access() to permit access when no matching lines are found in
+    the access file.  Although DJB's tcprules documentation doesn't explicitly
+    say so, no matching lines should allow access.  Thanks to Steve Cole for
+    reporting this one.
+
+VERSION 3.0.1 -- 9/12/2007
+  Fixed "configure" to remove the "_beta1" tag from the version number.  That
+    should never have been published.
+  Changed usage() to show that optional values to long commands must be
+    separated by an equals sign.  getopt_long() is really becoming a hassle.
+    Thanks to Richard Kreider for reporting this one.
+  Fixed find_address() to accept addresses that aren't correctly delimited with
+    <> characters and/or have multiple (illegal) spaces after the colon.  Thanks
+    to Davide Bozzelli for reporting this one.
+  Fixed prepare_settings() to set the idle timeout seconds to the correct
+    variable instead of setting the connection timeout variable.  Thanks to
+    Carlo Blohm for reporting this one.
+  Fixed smtp_filter() to print the rejection message to HELO and EHLO, even if
+    those commands appear in an improper place in the protocol.
+  Fixed smtp_filter() to print the rejection message with an error code in
+    response to STARTTLS if the command is given in an improper place in the
+    protocol.
+  Added some regression tests to find these bugs in the future.
+  Fixed the usage statement in sendrecv to show the -w flag.
+
+VERSION 3.0.0 -- 9/11/2007
+  Added command line options never-graylist-rdns-dir, always-graylist-rdns-dir
+    and rdns-whitelist-dir to search domain directory structures just like
+    rdns-blacklist-dir.
+  Added the command line option rdns-blacklist-file to search a file just like
+    rdns-whitelist-file.
+  Moved the command line option labels into configuration.c so they can be
+    shared with the config file parser.
+  Changed process_command_line() to build the list of short options from the
+    list of long options instead of hardcoding them.  Less maintenance this way.
+  Modified check_rdns_keywords(), search_file() and search_tcprules_file() to
+    correctly track line numbers and return the matching line number instead of
+    just 1.
+  Changed logging to allow the amount of information to be turned up or down.
+    This should make spamdyke less chatty in the syslog for small errors.
+  Modified smtp_filter() and run_tests() to report the matching filename and
+    line number from check_rdns_keywords(), search_file() and
+    search_tcprules_file() in syslog if the logging level is high enough.
+  Fixed find_address() to locate the real email address and ignore BATV tags,
+    relay paths and bang paths.  Thanks to Walter Russo for reporting this one
+    (again).
+  Changed middleman() to obey minimums and maximums for the amount of time to
+    select() for traffic.  If spamdyke waits too long, the qmail process might
+    not get wait()ed for a while, leaving a lot of defunct/zombie processes
+    around.  On a busy server, this could be a problem.  Thanks to Jason M for
+    reporting this one.
+  Added process_config_file() to process configuration files instead of
+    requiring all configuration to be done on the command line.  At the moment,
+    the file just uses the same (long option) directives as the command line.
+  Added test_settings() to run tests on every configuration option and
+    (hopefully) identify misconfigurations before someone makes them on a live
+    server.
+  Added the command line option "config-test" to run test_settings().
+  Renamed log_writeln() and log_write_rejection() to output_writeln() and
+    output_write_rejection(), respectively, to make it clearer what they're
+    doing.
+  Changed smtp_filter() to allow multiple authentication attempts.  Some
+    clients retry authentication several times, presumably to deal with servers
+    that can't use the authentication method they prefer.
+  Changed middleman() to collect (and send) whole lines of input instead of
+    single characters.  Single character write()s were causing problems with
+    Nagios and Windows clients.
+  Changed output_write_rejection() to create a single output line and send it
+    to output_writeln() all at once instead of sending a piece at a time.  This
+    keeps packets together for stupid Windows clients that just can't handle
+    reassembling TCP packets correctly.
+  Changed main() to always run spamdyke (as opposed to starting qmail without
+    spamdyke listening) even if a whitelist is matched.  This way, spamdyke
+    can report all traffic to syslog, not just traffic that _may_ be filtered.
+  Changed smtp_filter() and middleman() to catch the return codes from qmail
+    when the remote client gives the recipient address.  Now, if spamdyke
+    doesn't block the recipient command but qmail does (e.g. for relaying),
+    spamdyke will log the correct message.
+  Incorporated GNU autoconf to create a "configure" script for spamdyke and the
+    "utils" folder.  The days of "make no_tls" and "make bsd" are thankfully
+    over.
+  Renamed all of the test folders to group them by function so it's easier to
+    see what tests exist.  Sequential numbers just weren't working.
+  Changed dns_mx() to lookup the MX record before returning success.  This means
+    the sender MX filter now requires a mail exchanger record _and_ at least one
+    mail exchanger must have an IP address.  Before, the MX record was enough,
+    even if there was no corresponding A record.
+  Changed usage() to read the options and help text from get_spamdyke_options()
+    in configuration.c so the help message won't ever be out of sync with the
+    available options again.
+  Added the command line option "tls-privatekey-password-file" to allow the SSL
+    private key password to be read from a file instead of the command line.
+    This way, the password isn't visible to everyone who can view a process
+    list.
+  Changed search_file(), search_tcprules_file() and check_rdns_keywords() so
+    they no longer build their fscanf() patterns into a stack variable but
+    instead use a literal search pattern assembled at compile time with
+    STRINGIFY().
+  Added the command line options "hostname-file" and "hostname-command" to
+    support reading the local hostname from a file or from a command (e.g.
+    "hostname -f") instead of forcing it to be specified on the command line.
+  Changed middleman() and smtp_filter() to always monitor and trust
+    authentication carried out by qmail, even if "smtp-auth-command" was not
+    given.  This means spamdyke will always disable its filters for
+    authenticated users even if it can't check the authentication itself.
+    I'm not sure why I didn't design spamdyke this way in the first place.
+  Added command line options recipient-whitelist-file and sender-whitelist-file
+    so specific sender and recipient addresses can bypass the filters.  Sender
+    addresses are very easy to fake and recipient addresses are, of course,
+    known to spammers, so both of these options are ill-advised.  I've only
+    added them due to popular demand.
+  Added command line option check-rhsbl to check righthand-side blacklists.
+    Both the server's rDNS domain name and the sender's email domain name are
+    checked.
+  Added command line options check-dns-whitelist and check-rhs-whitelist to
+    allow DNS RBLs and RHSBLs to act as whitelists instead of blacklists.
+    Anyone using DNS-based blacklists _and_ whitelists had better have some
+    seriously fast DNS servers.
+  Changed dns_txt(), dns_mx() and dns_ptr_lookup() to pass a stack of previous
+    queries whenever they recursively lookup CNAME records, to prevent a cylical
+    CNAME structure from leading to infinite recursion.
+  NOT BACKWARDS COMPATIBLE: Changed the syslog entry format: renamed "origin" to
+    "origin_ip", added "origin_rdns:" before the rDNS name, added "auth:"
+    before the authenticated username and added "reason:" before the rejection
+    reason when a timeout occurs.
+  Changed process_command_line() to assume the remote IP address is 0.0.0.0 if
+    the environment variable TCPREMOTEIP is not set.
+  Added a ton more test scripts for all of the new options and for testing
+    config files.
+  Added dnsa, dnsns and dnssoa to the "utils" folder for performing DNS queries
+    of A, NS and SOA records, respectively.  Wouldn't it be AMAZING if the
+    libc maintainers added standard functions to do these queries?!
+  NOT BACKWARDS COMPATIBLE: Changed the "flag" options to take optional
+    arguments instead of simply assuming "true" when the option was given.
+    Unfortunately, getopt_long() is too stupid to handle them properly, which
+    means clustered options (e.g. -rRc) can no longer be used.  They must be
+    separated (e.g. -r -R -c).  Also, arguments given with the short version
+    must not be separated by a space (e.g. -l3).
+  NOT BACKWARDS COMPATIBLE: Renamed the long command line option "use-syslog"
+    to "log-level".
+  Fixed middleman() to completely bypass all processing when TLS passthrough is
+    active.  The additional processing was buffering TLS traffic until the data
+    contained a newline character (purely by coincidence).  This buffering was
+    preventing the passthrough from functioning properly.  Thanks to Dominik
+    Dausch for reporting this one.
+
+VERSION 2.6.3 -- 6/21/2007
+  Fixed a serious bug where spamdyke was closing the connection to qmail and
+    exiting as soon as the remote host exited.  When the remote host sends its
+    SMTP data in one burst and closes the connection without waiting for the
+    response code from the DATA segment, qmail doesn't accept the message and
+    nothing gets delivered.
+  Added some code to log_writeln() to translate bare carriage returns into
+    carriage return/linefeed combinations.  This allows poorly written remote
+    servers to send mail, most notably Microsoft web servers.  Dogmatically
+    refusing to accept mail by refusing to be more flexible than RFC 822
+    will never change the world; let's be reasonable instead of bouncing
+    messages back to our friends who can't change their mail servers anyway.
+  Fixed smtp_filter() to accept parameters to AUTH LOGIN when the MUA sends the
+    authentication information with the command instead of waiting for the
+    prompts.  Thanks to Carlo Blohm for reporting this one.
+
+VERSION 2.6.2 -- 6/7/2007
+  Fixed smtp_filter() to accept parameters to AUTH PLAIN when the MUA sends the
+    authentication information with the command instead of waiting for another
+    prompt.
+  Changed find_address() to strip BATV tags from addresses so whitelist/
+    blacklist matching can still take place.  Reported by Walter Russo.
+  Added utils/passwordcheck to help troubleshoot SMTP AUTH problems.
+  Added more logging to exec_checkpassword() to aid troubleshooting.
+
+VERSION 2.6.1 -- 6/4/2007
+  Changed calls to tolower() and isalnum() to eliminate warnings from gcc 3.3.3
+    on NetBSD 3.1.  Thanks to David Frese for reporting this one.
+  Fixed a very small typo in the new mask/flag system that was preventing
+    spamdyke from advertising SMTP AUTH on unpatched qmail servers --
+    FILTER_FLAG_AUTH_ADD had the same value as FILTER_FLAG_AUTH_NONE.  Oops.
+    Thanks to Renato Franzin for reporting this one.
+  Fixed an oversight in the use of gethostbyname() to perform DNS lookups for A
+    records.  If the server is configured to search a domain for matching names
+    ("search" in /etc/resolv.conf) and the domain has a wildcard DNS entry, the
+    DNS RBL code was always matching because an A record was always found. 
+    Adding a dot to the end of the queried name prevents the domain searching
+    and returns correct results.  Thanks to "Paolo", Alexander Fordyce and Jens
+    Mickerts for reporting and helping me troubleshoot this one.
+
+VERSION 2.6.0 -- 5/29/2007
+  Added support for STARTTLS, similar to the way SMTP AUTH is implemented -- if
+    a server certificate is available, spamdyke takes care of the TLS.  If not
+    but qmail supports TLS, spamdyke passes it through.
+  Changed the read() and write() calls to the network to use macros named
+    NETWORK_READ() and NETWORK_WRITE() that are replaced by TLS routines when
+    TLS support has been compiled in.
+  Changed the smtp_filter() return codes to use a mask/flag system because the
+    possible permutations of PASS/INTERCEPT/QUIT with ADD/REMOVE/CAPTURE AUTH
+    and ADD/REMOVE/CAPTURE TLS and CHILD QUIT/CONTINUE were getting too complex.
+  Fixed search_file() to match a file entry where the search text matches the
+    entry completely but the entry has wildcard markers at the start and/or end.
+  Added TLS support to tests/sendrecv so TLS can be tested from scripts.
+  Fixed numerous small bugs in tests/sendrecv that were causing inaccurate test
+    results (false positives and false negatives).
+  Updated all of the test scripts to make renumbering them easier.
+  Added a new test script to exercise a small whitelist wildcard bug I found.
+  Added 10 new test scripts to exercise the new TLS features.
+  Changed process_command_line() and usage() to print a brief usage message if
+    no parameters are given.
+  Changed process_command_line() and usage() to print a brief error message if
+    a bad parameter is given.
+  Changed process_command_line() and usage() to print the full usage message if
+    -h or --help is given.
+  Changed process_command_line() and usage() to print the version header if -v
+    or --version is given.
+  Renamed test_smtpauth_crammd5, test_smtpauth_login and test_smtpauth_plain to
+    smtpauth_crammd5, smtpauth_login and smtpauth_plain, respectively.
+  Moved smtpauth_crammd5, smtpauth_login and smtpauth_plain from the utils
+    folder to tests/smtpauth, since they're only used by the test scripts
+    anyway.
+  Added alternate command line options for people who spell "gray" with an "e".
+    They do the same thing.
+  Updated the documentation.
+
+VERSION 2.5.0 -- 5/7/2007
+  Moved portions of spamdyke's code from spamdyke.c into new .c and .h files to
+    make it a little easier to understand and maintain.
+  Added base64_encode() and base64_decode() to transfer data to/from base64
+    format.
+  Added md5() to produce an MD5 digest of a data block.  Turns out this wasn't
+    necessary for spamdyke, only for test_smtpauth_crammd5.  Oops.
+  Renamed the "make openbsd" command to "make bsd" since apparently all *BSD
+    distributions don't need -lresolv.
+  Renamed search_ip_file() to search_tcprules_file() and extended it to support
+    IP ranges, rDNS names and remote info like tcprules does (according to
+    http://cr.yp.to/ucspi-tcp/tcprules.html).  This makes the IP black/
+    whitelist files much more flexible.  This will be much handier in the next
+    version (AKA The Great Configuration Overhaul).
+  Modified middleman() and smtp_filter(), added exec_checkpassword() so spamdyke
+    can do SMTP AUTH, either by offering it itself or observing the qmail
+    traffic.  LOGIN, PLAIN and CRAM-MD5 are supported.
+  Changed the STRLEN_ macros in spamdyke.h to use a single STRLEN() macro so the
+    preprocessor will count characters instead of doing it by hand.  Much safer
+    this way.
+  Removed "-a"'s (max number of recipients per message) dependence on "-d"
+    (local domains file).  With SMTP AUTH, the local access file and whitelists,
+    this shouldn't be necessary.
+  Added process_access() to process local access files (e.g. /etc/tcp.smtp) and
+    export environment variables based on the source of the incoming connection.
+  Added relay prevention based on the content of the local access file(s) and
+    the list(s) of local domains.  Connections from remote sources that are
+    granted relay permission in the access file(s) are allowed to relay.  Users
+    who authenticate with SMTP AUTH are allowed to relay.  All others must send
+    to local addresses only.
+  Added a series of test scripts to exercise all of spamdyke's filters and
+    options.  This should make it easier to regression test new versions.
+  Changed search_file() and search_tcprules_file() to compare domain names in a
+    case insensitive manner.
+  Changed canonicalize_path() to reduce all file paths to lowercase.  This was
+    causing graylisting to be inconsistant.  Reported by bcarr@purgatoire.org.
+
+VERSION 2.4.0 -- 4/9/2007
+  Added search_ip_file() to search files for IP addresses and allow wildcards,
+    network sizes (numbers of bits, e.g. 11.22.33.44/16) and netmasks (e.g.
+    11.22.33.0/255.255.255.0).
+  Added new options to allow graylisting exclusions by IP address and rDNS
+    name.
+  Added new options to activate graylisting for only certain IP addresses and
+    rDNS names.
+  Updated the documentation.
+
+VERSION 2.3.1 -- 4/2/2007
+  Added some explicit casting to printf("%.*s") arguments to make them ints
+    instead of longs.  gcc 3.3 on OpenBSD was complaining.
+  Changed a datatype in log_write() from long to time_t.  gcc 3.3 on OpenBSD
+    was complaining.
+  Changed all uses of sprintf() to snprintf(), even though they were already
+    safe from buffer overruns.  gcc 3.3 on OpenBSD was complaining.
+  Added a new target to the Makefile in the spamdyke and utils folders named
+    "openbsd" that compiles without the "-lresolv" flag.  gcc 3.3 on OpenBSD
+    includes the resolver library automatically and throws an error when it
+    is explicitly specified.
+  Added some additional #include directives in dnsmx.c, dnsptr.c and dnstxt.c
+    because they're not included by resolv.h on OpenBSD.
+
+VERSION 2.3.0 -- 4/2/2007
+  Gained a broader understanding of the resolver library and DNS packet
+    structure, then rewrote most of dns_txt() and dns_ptr_lookup() to (more)
+    correctly process DNS data.
+  Added dns_mx() to perform MX record lookups.
+  Changed process_command_line() to use getopt_long() and added long option
+    equivalents to the existing command line flags.
+  Added the option "reject-missing-sender-mx" to reject email from senders
+    whose domains aren't local and don't have MX records and/or A records.
+    AOL does this.
+  Updated the usage statement to show the new (long) command line options.
+  Updated the README.txt to show the new (long) command line options.
+  Moved domain2path and domainsplit into a new folder named "utils".
+  Created dnsmx, dnsptr and dnstxt in the utils folder by copying the dns_mx(),
+    dns_ptr() and dns_txt() functions from spamdyke.  They are simple command
+    line utilities that no one will ever use except as examples of how to make
+    MX, PTR and TXT DNS queries using libc.  As far as Google knows, there are
+    no such examples anywhere else on the internet.
+  Changed the DNS RBL code to check for A records in addition to TXT records.
+    Some RBLs are using A records, I don't know why.
+  Fixed the DNS RBL code not to check 127.0.0.1 for RBL entries.
+
+VERSION 2.2.1 -- 3/20/2007
+  Fixed a signed/unsigned mismatch in domainsplit and spamdyke caused by
+    assigning integer function returns to char variables while testing their
+    values.  Reported by David Frese.
+  Added an entry to the FAQ.
+
+VERSION 2.2.0 -- 3/19/2007
+  Changed all uses of atoi() to sscanf() so conversion errors can be detected.
+  Changed is_ip_in_name() to convert the ip octets to integers once instead of
+    multiple times in different tests.
+  Changed search_file() to allow wildcards at the start and end of the lines in
+    the file.
+  Changed the sender blacklist code to allow '@' wildcards at the start of the
+    line so entire domains can be blocked.
+  Changed the recipient blacklist code to allow '@' wildcards at the start and
+    end of the line so entire domains can be blocked or a username can be
+    blocked across all domains.
+  Changed the IP blacklist code to allow '.' wildcards at the end of the line.
+  Changed the rDNS whitelist code to allow '.' wildcards at the start of the
+    line.
+  Changed the IP whitelist code to allow '.' wildcards at the end of the line.
+  Moved the command line processing code into a new function named
+    process_command_line() and added fields to the filter_settings structure to
+    save values that had previously been immediately tested and discarded.
+    This function also clears the way for reading configuration items from a
+    source other than the command line (e.g. a configuration file).
+  Modified the filter_settings structure and related code to allow multiple
+    values to be given for the local domains file, the rDNS blacklist keywords
+    file, the rDNS blacklist directory, the IP blacklist file, the rDNS
+    whitelist file and the IP whitelist file.
+  Added a new function named run_tests() to run the tests requested on the
+    command line.  This eliminates the "in-order" nonsense.  Tests now always
+    run in a specific order, from least expensive to most expensive.  This
+    function also clears the way for a single filter_settings structure to be
+    evaluated for multiple connections.
+  Updated README.txt to include better/updated details.
+  Added FAQ.txt to contain some common questions and answers.
+
+VERSION 2.1.0 -- 3/1/2007
+  Changed the returned SMTP errors to use permanent error codes when the sender
+    is blacklisted, the recipient address is not fully qualified, the recipient
+    is blacklisted, the remote IP address is found on a DNSRBL, the remote rDNS
+    name is blacklisted, the remote IP address is blacklisted, the remote rDNS
+    name contains the remote IP address, or the remote server is an earlytalker.
+    Temporary error codes are still sent when the remote server's rDNS name
+    can't be found or if it doesn't resolve, just in case the DNS server is
+    slow.  Temporary error codes are obviously used for graylisting and limiting
+    the number of recipients.  This change resulted in an 80% drop in traffic
+    overnight.  Is it possible spammers do clean their lists?  Nah...
+  Added a copyright statement to the top of domain2path.c.
+  Added the domainsplit utility, since it needed a home anyway and it's useful
+    in scripts.
+  Changed the syslog error messages to include a description of the error when
+    possible, especially for filesystem-related errors.
+  Fixed check_rdns_keywords() to not log an "unable to open file" error if the
+    rDNS name doesn't exist anyway.
+
+VERSION 2.0.0 -- 2/23/2007
+  Updated dns_ptr() to chase CNAME entries when looking for PTR entries, since
+    a lot of ISPs use CNAMEs to delegate reverse DNS to their subscribers.
+  Changed the rDNS blacklist to use a directory structure instead of a flat
+    file, since searching a large file on a busy system takes too much CPU.
+
+VERSION 1.1.0 -- 1/31/2007
+  Added a version string and copyright statement to the usage message.
+  Changed the graylisting and full logging features to set their file modes to
+    0600 to help protect users' privacy.
+  Added recipient blacklisting (-S).
+  Added an rDNS lookup function so spamdyke can do its own DNS work instead of
+    relying on tcpserver (which doesn't always do it).
+  Other small bug fixes.
+  Added a README.txt file with full explanations of all spamdyke's features.
+
+VERSION 1.0.0 -- 1/25/2007
+  Initial version.

@@ -1,0 +1,40 @@
+# This is an example spamdyke configuration file for spamdyke version 5.0.1.
+#
+# This file enables some basic options that are usually pretty safe, just to
+# get you started.  Lots more options are available.
+#
+# See the README.html file in spamdyke's "documentation" directory for a full
+# description of each option.  The documentation is also available on spamdyke's
+# website:
+#   http://www.spamdyke.org/
+
+# Reject connections from remote servers without rDNS names.
+reject-empty-rdns
+
+# Reject connections from servers with rDNS names that do not resolve to IP
+# addresses.
+reject-unresolvable-rdns
+
+# Reject messages from sender whose domain names have no MX records.
+reject-sender=no-mx
+
+# Controls the amount (and detail) of the log messages spamdyke produces.
+# Available values: none, error, info, verbose, debug, excessive
+log-level=info
+
+# Close the connection after SECS seconds of inactivity.  A value of 0 disables
+# this feature.
+idle-timeout-secs=300
+
+# Check a couple DNS RBLs.
+dns-blacklist-entry=zen.spamhaus.org
+dns-blacklist-entry=b.barracudacentral.org
+
+################################################################################
+# SET THE FILENAME BELOW AND ENABLE BOTH OF THESE OPTIONS
+################################################################################
+# Controls the way spamdyke offers and supports TLS or SMTPS.
+#tls-level=smtp
+
+# Read SSL certificate from FILE.
+#tls-certificate-file=FILE
