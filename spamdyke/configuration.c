@@ -1238,6 +1238,23 @@ int prepare_settings(int argc, char *argv[], char *envp[], int (*main_function)(
       "Use IPADDRESS as an IP address that is an exception from the current graylisting policy. The effect of the exception depends on the value of \"graylist-level\". Default: no exceptions"
     },
     {
+      CONFIG_TYPE_OPTION_ARRAY,
+      CONFIG_ACCESS_NONE,
+      CONFIG_LOCATION_CMDLINE | CONFIG_LOCATION_GLOBAL_FILE | CONFIG_LOCATION_DIR,
+      { "graylist-exception-sender", required_argument, NULL, -1 },
+      { .string_value = NULL },
+      { .string_value = NULL },
+      { .get_string_array = CONFIG_ACCESSOR_STRING_ARRAY(graylist_exception_sender) },
+      { .max_strlen = 0 },
+      FILTER_DECISION_UNDECIDED,
+      FILTER_GRACE_NONE,
+      NULL,
+      NULL,
+      NULL,
+      "DOMAIN",
+      "Use DOMAIN as a sender domain that is an exception from the current graylisting policy. The effect of the exception depends on the value of \"graylist-level\". Default: no exceptions"
+    },
+    {
       CONFIG_TYPE_FILE_ARRAY,
       CONFIG_ACCESS_READ_ONLY,
       CONFIG_LOCATION_CMDLINE | CONFIG_LOCATION_GLOBAL_FILE | CONFIG_LOCATION_DIR,

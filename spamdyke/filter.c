@@ -2522,6 +2522,15 @@ int filter_recipient_graylist(struct filter_settings *current_settings, int *tar
           }
 
     if (!found_match &&
+        (current_settings->current_options->graylist_exception_sender != NULL))
+      for (i = 0; current_settings->current_options->graylist_exception_sender[i] != NULL; i++)
+        if (tld_check(current_settings->sender_domain, current_settings->current_options->graylist_exception_sender[i]))
+          {
+          found_match = 1;
+          break;
+          }
+
+    if (!found_match &&
         (current_settings->current_options->graylist_exception_rdns_file != NULL))
       for (i = 0; current_settings->current_options->graylist_exception_rdns_file[i] != NULL; i++)
         if (search_file(current_settings, current_settings->current_options->graylist_exception_rdns_file[i], current_settings->server_name, current_settings->strlen_server_name, '.', ".", '\0', NULL) > 0)

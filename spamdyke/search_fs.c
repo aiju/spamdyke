@@ -208,6 +208,20 @@ char *find_case_insensitive_needle(char *haystack, char *needle)
   return(return_value);
   }
 
+int
+tld_check(char *s, char *p)
+{
+	int ls, lp;
+
+	if(s == NULL || p == NULL) return 0;
+	if(*p != '.')
+		return strcasecmp(s, p) == 0;
+	ls = strlen(s);
+	lp = strlen(p);
+	if(ls < lp) return 0;
+	return strcasecmp(s + ls - lp, p) == 0;
+}
+
 /*
  * EXPECTS:
  *   target_string = string content to search for, must not be NULL or zero length

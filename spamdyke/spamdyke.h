@@ -1667,6 +1667,7 @@ struct option_set
   char **graylist_exception_rdns;
   char **graylist_exception_rdns_file;
   char **graylist_exception_rdns_dir;
+  char **graylist_exception_sender;
   char **blacklist_header;
   char **blacklist_header_file;
   char **smtp_auth_command;

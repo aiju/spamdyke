@@ -36,5 +36,6 @@ char *reassemble_address(char *target_username, char *target_domain, char *missi
 int examine_header(struct filter_settings *current_settings, char *target_header, int strlen_target_header, char *target_entry, int strlen_target_entry);
 int search_header_file(struct filter_settings *current_settings, char *search_filename, char *target_header, int strlen_target_header);
 int check_path_perms(struct filter_settings *current_settings, char *target_path, int type_flag, int permission_flags, struct stat *target_stat, int target_uid, int target_gid);
+int tld_check(char *, char *);
 
 #endif /* SEARCH_FS_H */
